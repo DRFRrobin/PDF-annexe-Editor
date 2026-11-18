@@ -11,3 +11,7 @@ Servir le dossier (`python3 -m http.server`) puis ouvrir `http://localhost:8000/
 ## Publication
 
 Le lien ci-dessus nécessite l'activation de GitHub Pages : Settings → Pages → Source « Deploy from a branch », branche `main`, dossier `/ (root)`.
+
+## Versions
+
+Version actuelle : **1.1.0** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).
