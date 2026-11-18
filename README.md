@@ -1,6 +1,6 @@
 # PDF Annexe Editor
 
-**👉 [Ouvrir l'outil](https://drfrrobin.github.io/PDF-annexe-Editor/)**
+**👉 [Ouvrir l'outil](https://drfrrobin.github.io/PDF-annexe-Editor/)**  ·  [Code source sur GitHub](https://github.com/DRFRrobin/PDF-annexe-Editor)
 
 Application web 100 % cliente (aucune donnée n'est envoyée) : ajoute dans un rectangle rouge, à l'endroit choisi, le texte « Annexe X Folio n/N » sur les pages d'un PDF.
 
@@ -14,4 +14,4 @@ Le lien ci-dessus nécessite l'activation de GitHub Pages : Settings → Pages �
 
 ## Versions
 
-Version actuelle : **1.1.0** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).
+Version actuelle : **1.1.1** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).

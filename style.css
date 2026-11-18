@@ -22,3 +22,4 @@ button{padding:7px 12px;border:1px solid #bbb;border-radius:5px;background:#fff;
 #box{position:absolute;border:2px solid #e00;color:#e00;font:bold 14px Helvetica,Arial,sans-serif;white-space:nowrap;cursor:move;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none}
 #empty{color:#777}
 @media(max-width:760px){main{flex-direction:column}#panel{width:100%}}
+header a{color:#06c;font-size:13px}
