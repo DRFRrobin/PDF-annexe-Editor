@@ -1,6 +1,8 @@
 *{box-sizing:border-box}
 body{margin:0;font:15px system-ui,sans-serif;background:#f3f4f6;color:#111}
 header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}
+.repo{display:block;margin-top:14px;padding:10px;text-align:center;background:#24292f;color:#fff;border-radius:5px;text-decoration:none;font-weight:600}
+.repo:hover{background:#000}
 h1{margin:0;font-size:20px}header p{margin:2px 0 0;color:#555;font-size:13px}
 main{display:flex;gap:16px;padding:16px;align-items:flex-start}
 #panel{width:300px;flex:none;background:#fff;padding:14px;border-radius:8px;box-shadow:0 1px 3px #0002}
@@ -23,3 +25,4 @@ button{padding:7px 12px;border:1px solid #bbb;border-radius:5px;background:#fff;
 #empty{color:#777}
 @media(max-width:760px){main{flex-direction:column}#panel{width:100%}}
 header a{color:#06c;font-size:13px}
+[hidden]{display:none!important}
