@@ -1,7 +1,9 @@
 'use strict';
+const APP_VERSION = '1.1.0'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
 const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
 const $ = id => document.getElementById(id);
+$('ver').textContent = 'v' + APP_VERSION;
 const PAD = 4, BORDER = 1.5;
 let bytes = null, pdfjsDoc = null, numPages = 0, cur = 1, scale = 1, fileName = 'document.pdf';
 let pos = { fx: 0.55, fy: 0.03 };            // coin haut-gauche, fraction de la page (vue affichée)
