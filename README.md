@@ -6,7 +6,7 @@ Application web 100 % cliente (aucune donnée n'est envoyée) : ajoute dans un r
 
 ## Version Rust
 
-Une version Rust (CLI + WebAssembly) est dans [`rust/`](rust/README.md).
+Une version Rust (application de bureau, sans ligne de commande) est dans [`rust/`](rust/README.md).
 
 ## Utilisation en local
 
@@ -18,4 +18,4 @@ Le lien ci-dessus nécessite l'activation de GitHub Pages : Settings → Pages �
 
 ## Versions
 
-Version actuelle : **1.1.7** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).
+Version actuelle : **1.1.8** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).
