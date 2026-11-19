@@ -99,7 +99,7 @@ impl Settings {
     }
 }
 
-fn config_file() -> Option<PathBuf> {
+fn config_file(dir: &str) -> Option<PathBuf> {
     let base = if cfg!(windows) {
         PathBuf::from(std::env::var_os("APPDATA")?)
     } else if cfg!(target_os = "macos") {
@@ -110,18 +110,21 @@ fn config_file() -> Option<PathBuf> {
             _ => PathBuf::from(std::env::var_os("HOME")?).join(".config"),
         }
     };
-    Some(base.join("AnnexePDF").join("settings.txt"))
+    Some(base.join(dir).join("settings.txt"))
 }
 
+/// Reprend les réglages de l'ancien dossier « AnnexePDF » si « Annexio » n'existe pas encore.
 pub fn load() -> Settings {
-    config_file()
-        .and_then(|p| std::fs::read_to_string(p).ok())
+    ["Annexio", "AnnexePDF"]
+        .iter()
+        .filter_map(|d| config_file(d))
+        .find_map(|p| std::fs::read_to_string(p).ok())
         .map(|t| Settings::from_text(&t))
         .unwrap_or_default()
 }
 
 pub fn save(s: &Settings) {
-    if let Some(p) = config_file() {
+    if let Some(p) = config_file("Annexio") {
         if let Some(dir) = p.parent() {
             let _ = std::fs::create_dir_all(dir);
         }

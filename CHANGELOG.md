@@ -2,6 +2,9 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.16
+- Le logiciel s'appelle désormais **Annexio** (web et Rust) : titre, fenêtre, exécutable `annexio-<système>`, bibliothèque, métadonnées de l'exe. Les réglages de l'ancien dossier `AnnexePDF` sont repris automatiquement. L'adresse du dépôt et du site web ne changent pas.
+
 ## 1.1.15
 - Application Rust : thème Système / Clair / Sombre et taille de l'interface réglable (80–200 %, Ctrl + / Ctrl − aussi), mémorisés.
 

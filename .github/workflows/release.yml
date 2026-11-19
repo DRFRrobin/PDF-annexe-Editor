@@ -37,11 +37,11 @@ jobs:
         working-directory: rust
       - name: Renommer
         shell: bash
-        run: cp "rust/target/release/pdf-annexe${{ matrix.ext }}" "pdf-annexe-${{ matrix.suffix }}${{ matrix.ext }}"
+        run: cp "rust/target/release/annexio${{ matrix.ext }}" "annexio-${{ matrix.suffix }}${{ matrix.ext }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: pdf-annexe-${{ matrix.suffix }}
-          path: pdf-annexe-*
+          name: annexio-${{ matrix.suffix }}
+          path: annexio-*
 
   release:
     needs: build
@@ -54,5 +54,5 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
-          files: pdf-annexe-*
+          files: annexio-*
           generate_release_notes: true

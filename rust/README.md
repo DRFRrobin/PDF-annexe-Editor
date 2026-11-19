@@ -1,12 +1,12 @@
 <p align="center"><img src="../assets/logo-256.png" width="96" alt="Logo"></p>
 
-# PDF Annexe Editor — version Rust
+# Annexio — version Rust
 
-Application de bureau (Windows, Linux, macOS) : ajoute dans un rectangle rouge, à l'endroit choisi, le texte « Annexe X Folio n/N » sur les pages d'un PDF. 100 % local : votre fichier ne quitte jamais l'ordinateur.
+**Annexio** — application de bureau (Windows, Linux, macOS) : ajoute dans un rectangle rouge, à l'endroit choisi, le texte « Annexe X Folio n/N » sur les pages d'un PDF. 100 % local : votre fichier ne quitte jamais l'ordinateur.
 
 ## Téléchargement
 
-`pdf-annexe-windows-x86_64.exe` (ou Linux / macOS) (fichier fourni avec la release). Double-clic pour lancer.
+`annexio-windows-x86_64.exe` (ou Linux / macOS) (fichier fourni avec la release). Double-clic pour lancer.
 
 ## Utilisation
 
@@ -30,7 +30,7 @@ Aperçu : molette = changer de page ; Ctrl+molette ou boutons − / + = zoom (la
 | Ctrl + / Ctrl − | Taille de l'interface |
 | Échap | Quitter un champ de saisie |
 
-Les réglages (texte, position, thème, taille, fichiers récents) sont mémorisés dans un fichier local (`%APPDATA%\AnnexePDF\settings.txt` sous Windows). Un PDF peut aussi être passé en argument ou « ouvert avec » l'application.
+Les réglages (texte, position, thème, taille, fichiers récents) sont mémorisés dans un fichier local (`%APPDATA%\Annexio\settings.txt` sous Windows). Un PDF peut aussi être passé en argument ou « ouvert avec » l'application.
 
 ## Développement
 
@@ -45,7 +45,7 @@ La bibliothèque (`src/lib.rs`, tamponnage avec `lopdf`) expose aussi une liaiso
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo build --release --target wasm32-unknown-unknown --no-default-features --features wasm --lib
-wasm-bindgen --target web --out-dir pkg target/wasm32-unknown-unknown/release/pdf_annexe.wasm
+wasm-bindgen --target web --out-dir pkg target/wasm32-unknown-unknown/release/annexio.wasm
 ```
 
 `stamp_pdf(bytes: Uint8Array, optionsJson: string) -> Uint8Array`

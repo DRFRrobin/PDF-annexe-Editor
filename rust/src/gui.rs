@@ -8,7 +8,7 @@ use hayro::hayro_interpret::InterpreterSettings;
 use hayro::hayro_syntax::Pdf;
 use hayro::vello_cpu::color::palette::css::WHITE;
 use hayro::{PixmapSettings, RenderCache, RenderSettings};
-use pdf_annexe::{box_size, parse_range, render_text, stamp, Options};
+use annexio::{box_size, parse_range, render_text, stamp, Options};
 use settings::Settings;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
@@ -566,7 +566,7 @@ impl App {
 
     fn tabs_bar(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            ui.heading("Annexe PDF");
+            ui.heading("Annexio");
             ui.add_space(16.0);
             ui.selectable_value(&mut self.tab, Tab::File, "📄 Fichier");
             ui.selectable_value(&mut self.tab, Tab::Settings, "⚙ Paramètres");
@@ -1025,12 +1025,12 @@ fn main() -> eframe::Result {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1180.0, 780.0])
             .with_min_inner_size([760.0, 520.0])
-            .with_title("Annexe PDF")
+            .with_title("Annexio")
             .with_icon(eframe::icon_data::from_png_bytes(include_bytes!("../../assets/logo-256.png")).expect("icône")),
         ..Default::default()
     };
     eframe::run_native(
-        "Annexe PDF",
+        "Annexio",
         opts,
         Box::new(move |cc| {
             cc.egui_ctx.set_zoom_factor(s.ui_scale);
