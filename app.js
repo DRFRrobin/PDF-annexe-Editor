@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION = '1.1.3'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
+const APP_VERSION = '1.1.4'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
 const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
 const $ = id => document.getElementById(id);

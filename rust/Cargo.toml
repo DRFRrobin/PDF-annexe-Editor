@@ -1,0 +1,28 @@
+[package]
+name = "pdf-annexe"
+version = "1.1.4"
+edition = "2021"
+description = "Ajoute un rectangle rouge « Annexe X Folio n/N » sur les pages d'un PDF (100 % local)"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "pdf-annexe"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+cli = []
+wasm = ["dep:wasm-bindgen", "dep:serde", "dep:serde_json"]
+
+[dependencies]
+lopdf = { version = "0.47", default-features = false }
+wasm-bindgen = { version = "0.2", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
