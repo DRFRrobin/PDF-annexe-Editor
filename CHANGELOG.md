@@ -2,6 +2,15 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.12
+- Application Rust : suppression de tout lien avec GitHub (lien du dépôt et système de mise à jour intégré, qui interrogeait GitHub). L'application ne fait plus aucune requête réseau.
+
+## 1.1.11
+- Nouveau logo (icône de l'exe Windows, de la fenêtre Rust, favicon et en-tête de l'app web).
+
+## 1.1.10
+- Application Rust : la largeur du panneau de gauche se règle en glissant sa bordure (le curseur devient ↔).
+
 ## 1.1.9
 - Application Rust : la molette de la souris (ou ↑ ↓ / Page préc. / Page suiv.) fait défiler les pages dans l'aperçu.
 

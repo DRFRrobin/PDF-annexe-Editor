@@ -8,13 +8,12 @@ use hayro::vello_cpu::color::palette::css::WHITE;
 use hayro::{PixmapSettings, RenderCache, RenderSettings};
 use pdf_annexe::{box_size, render_text, stamp, Options};
 use std::path::PathBuf;
-use std::sync::mpsc::{channel, Receiver};
-
-mod update;
 
 const RED: Color32 = Color32::from_rgb(222, 0, 0);
 const PREVIEW_SCALE: f32 = 1.6;
-const SIDE_W: f32 = 290.0;
+const SIDE_W: f32 = 290.0; // largeur par défaut du panneau
+const SIDE_MIN: f32 = 220.0;
+const SIDE_MAX: f32 = 640.0;
 /// Défilement cumulé (en points) pour changer de page : environ une encoche de molette.
 const WHEEL_STEP: f32 = 40.0;
 
@@ -53,6 +52,7 @@ enum Tab {
 struct App {
     tab: Tab,
     wheel: f32,
+    side_w: f32,
     bytes: Option<Vec<u8>>,
     name: String,
     path: Option<PathBuf>,
@@ -66,22 +66,6 @@ struct App {
     size_s: String,
     status: String,
     is_err: bool,
-    upd: Upd,
-    upd_rx: Option<Receiver<UpdMsg>>,
-}
-
-enum Upd {
-    Idle,
-    Checking,
-    UpToDate,
-    Available(update::Release),
-    Installing,
-    Done,
-}
-
-enum UpdMsg {
-    Checked(Result<Option<update::Release>, String>),
-    Installed(Result<(), String>),
 }
 
 impl Default for App {
@@ -90,6 +74,7 @@ impl Default for App {
         App {
             tab: Tab::File,
             wheel: 0.0,
+            side_w: SIDE_W,
             bytes: None,
             name: String::new(),
             path: None,
@@ -103,8 +88,6 @@ impl Default for App {
             opts,
             status: "Ouvrez un PDF (bouton ou glisser-déposer).".into(),
             is_err: false,
-            upd: Upd::Idle,
-            upd_rx: None,
         }
     }
 }
@@ -143,98 +126,6 @@ impl App {
                 self.tex = None;
             }
             Err(e) => self.say(e, true),
-        }
-    }
-
-    fn start_check(&mut self, ctx: &egui::Context) {
-        let (tx, rx) = channel();
-        let ctx = ctx.clone();
-        std::thread::spawn(move || {
-            let _ = tx.send(UpdMsg::Checked(update::check(env!("CARGO_PKG_VERSION"))));
-            ctx.request_repaint();
-        });
-        self.upd_rx = Some(rx);
-        self.upd = Upd::Checking;
-    }
-
-    fn start_install(&mut self, ctx: &egui::Context, rel: update::Release) {
-        let (tx, rx) = channel();
-        let ctx = ctx.clone();
-        std::thread::spawn(move || {
-            let _ = tx.send(UpdMsg::Installed(update::install(&rel).map(|_| ())));
-            ctx.request_repaint();
-        });
-        self.upd_rx = Some(rx);
-        self.upd = Upd::Installing;
-    }
-
-    fn poll_update(&mut self) {
-        let Some(rx) = &self.upd_rx else { return };
-        let Ok(msg) = rx.try_recv() else { return };
-        self.upd_rx = None;
-        match msg {
-            UpdMsg::Checked(Ok(Some(r))) => self.upd = Upd::Available(r),
-            UpdMsg::Checked(Ok(None)) => self.upd = Upd::UpToDate,
-            UpdMsg::Checked(Err(e)) => {
-                self.upd = Upd::Idle;
-                self.say(e, true);
-            }
-            UpdMsg::Installed(Ok(())) => self.upd = Upd::Done,
-            UpdMsg::Installed(Err(e)) => {
-                self.upd = Upd::Idle;
-                self.say(e, true);
-            }
-        }
-    }
-
-    fn update_ui(&mut self, ui: &mut egui::Ui) {
-        let ctx = ui.ctx().clone();
-        match &self.upd {
-            Upd::Idle => {
-                if ui.small_button("🔄 Rechercher une mise à jour").clicked() {
-                    self.start_check(&ctx);
-                }
-                ui.small("Contacte uniquement github.com ; aucun fichier n'est envoyé.");
-            }
-            Upd::Checking => {
-                ui.horizontal(|ui| {
-                    ui.spinner();
-                    ui.label("Recherche en cours…");
-                });
-            }
-            Upd::UpToDate => {
-                ui.colored_label(Color32::from_rgb(0, 120, 40), "✔ Vous avez la dernière version.");
-                if ui.small_button("Revérifier").clicked() {
-                    self.start_check(&ctx);
-                }
-            }
-            Upd::Available(rel) => {
-                let rel = rel.clone();
-                ui.colored_label(RED, format!("Nouvelle version disponible : {}", rel.version));
-                if rel.asset.is_some() {
-                    if ui.button("⬇ Installer la mise à jour").clicked() {
-                        self.start_install(&ctx, rel);
-                    }
-                } else {
-                    ui.small("Pas de fichier pour ce système dans cette release.");
-                    ui.hyperlink_to("Voir la release ↗", &rel.page);
-                }
-            }
-            Upd::Installing => {
-                ui.horizontal(|ui| {
-                    ui.spinner();
-                    ui.label("Téléchargement et installation…");
-                });
-            }
-            Upd::Done => {
-                ui.colored_label(Color32::from_rgb(0, 120, 40), "✔ Mise à jour installée.");
-                if ui.button("Redémarrer maintenant").clicked() {
-                    if let Ok(exe) = std::env::current_exe() {
-                        let _ = std::process::Command::new(exe).spawn();
-                    }
-                    ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-                }
-            }
         }
     }
 
@@ -289,6 +180,7 @@ impl App {
             }
         }
         ui.small("ou glissez un PDF dans la fenêtre");
+        ui.small("Astuce : glissez la bordure du panneau pour le redimensionner.");
         if self.bytes.is_none() {
             return;
         }
@@ -348,9 +240,6 @@ impl App {
         ui.separator();
         ui.label(egui::RichText::new("Application").strong());
         ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
-        self.update_ui(ui);
-        ui.add_space(4.0);
-        ui.hyperlink_to("Ouvrir le dépôt GitHub ↗", "https://github.com/DRFRrobin/PDF-annexe-Editor");
         ui.small("Tout reste sur votre ordinateur.");
     }
 
@@ -360,7 +249,7 @@ impl App {
             self.wheel = 0.0;
             return;
         }
-        let over_preview = ctx.pointer_hover_pos().is_some_and(|p| p.x > SIDE_W);
+        let over_preview = ctx.pointer_hover_pos().is_some_and(|p| p.x > self.side_w);
         let (dy, key) = ctx.input(|i| {
             let key = (i.key_pressed(egui::Key::PageDown) || i.key_pressed(egui::Key::ArrowDown)) as i32
                 - (i.key_pressed(egui::Key::PageUp) || i.key_pressed(egui::Key::ArrowUp)) as i32;
@@ -453,7 +342,6 @@ impl App {
 
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        self.poll_update();
         self.navigate_pages(ui.ctx());
         let dropped = ui.ctx().input(|i| i.raw.dropped_files.iter().map(|f| f.path().to_path_buf()).next());
         if let Some(p) = dropped {
@@ -464,15 +352,20 @@ impl eframe::App for App {
             self.tabs_bar(ui);
             ui.add_space(4.0);
         });
-        egui::Panel::left("panel").resizable(false).exact_size(SIDE_W).show(ui, |ui| self.side_panel(ui));
+        let side = egui::Panel::left("panel")
+            .resizable(true) // glisser la bordure pour élargir / rétrécir (curseur ↔)
+            .default_size(SIDE_W)
+            .size_range(SIDE_MIN..=SIDE_MAX)
+            .show(ui, |ui| self.side_panel(ui));
+        self.side_w = side.response.rect.width();
         egui::CentralPanel::default().show(ui, |ui| self.preview(ui));
     }
 }
 
 fn main() -> eframe::Result {
-    update::cleanup();
     let opts = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1100.0, 760.0]).with_min_inner_size([760.0, 520.0]).with_title("Annexe PDF"),
+        viewport: egui::ViewportBuilder::default().with_inner_size([1100.0, 760.0]).with_min_inner_size([760.0, 520.0]).with_title("Annexe PDF")
+            .with_icon(eframe::icon_data::from_png_bytes(include_bytes!("../../assets/logo-256.png")).expect("icône")),
         ..Default::default()
     };
     eframe::run_native("Annexe PDF", opts, Box::new(|_cc| {

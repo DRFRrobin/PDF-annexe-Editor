@@ -26,3 +26,4 @@ button{padding:7px 12px;border:1px solid #bbb;border-radius:5px;background:#fff;
 @media(max-width:760px){main{flex-direction:column}#panel{width:100%}}
 header a{color:#06c;font-size:13px}
 [hidden]{display:none!important}
+.logo{vertical-align:-6px;border-radius:7px}
