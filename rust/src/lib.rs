@@ -11,7 +11,7 @@ const PAD: f32 = 4.0;
 const BORDER: f32 = 1.5;
 const FONT_NAME: &str = "FAnx";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Options {
     pub annexe: String,
     /// Modèle : `{annexe}`, `{n}`, `{total}`.

@@ -2,6 +2,30 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.16
+- Le logiciel s'appelle désormais **Annexio** (web et Rust) : titre, fenêtre, exécutable `annexio-<système>`, bibliothèque, métadonnées de l'exe. Les réglages de l'ancien dossier `AnnexePDF` sont repris automatiquement. L'adresse du dépôt et du site web ne changent pas.
+
+## 1.1.15
+- Application Rust : thème Système / Clair / Sombre et taille de l'interface réglable (80–200 %, Ctrl + / Ctrl − aussi), mémorisés.
+
+## 1.1.14
+- Application Rust : zoom de l'aperçu (boutons, Ctrl+molette, « Page entière » / « Largeur »), colonne de miniatures (pastille rouge = page tamponnée), réglages et fichiers récents mémorisés, annuler / rétablir (Ctrl+Z / Ctrl+Y), messages d'erreur plus clairs, refus d'écraser le fichier d'origine.
+
+## 1.1.13
+- Application Rust : barre du bas toujours visible (« Générer le PDF… », état, boutons « Ouvrir le PDF » / « Ouvrir le dossier » après génération), raccourcis (Ctrl+O, Ctrl+S, Ctrl+W, Échap, Début/Fin), positions rapides (coins, centre, marge), flèches pour ajuster le tampon (Maj : ×10), info-bulles, modèles de texte, boutons Toutes / Paires / Impaires / Page courante. Les flèches ↑ ↓ déplacent désormais le tampon (pages : molette, Page préc./suiv.).
+
+## 1.1.12
+- Application Rust : suppression de tout lien avec GitHub (lien du dépôt et système de mise à jour intégré, qui interrogeait GitHub). L'application ne fait plus aucune requête réseau.
+
+## 1.1.11
+- Nouveau logo (icône de l'exe Windows, de la fenêtre Rust, favicon et en-tête de l'app web).
+
+## 1.1.10
+- Application Rust : la largeur du panneau de gauche se règle en glissant sa bordure (le curseur devient ↔).
+
+## 1.1.9
+- Application Rust : la molette de la souris (ou ↑ ↓ / Page préc. / Page suiv.) fait défiler les pages dans l'aperçu.
+
 ## 1.1.8
 - Mise à jour intégrée à l'application : bouton « Rechercher une mise à jour » (manuel, aucun appel réseau au démarrage). Télécharge le fichier de la dernière release GitHub pour votre système, vérifie sa taille, remplace l'exécutable et propose de redémarrer.
 - Barre d'onglets en haut de l'application : « Fichier » et « Paramètres ».

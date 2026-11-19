@@ -1,21 +1,25 @@
 [package]
-name = "pdf-annexe"
-version = "1.1.8"
+name = "annexio"
+version = "1.1.16"
 edition = "2021"
-description = "Ajoute un rectangle rouge « Annexe X Folio n/N » sur les pages d'un PDF (100 % local)"
+build = "build.rs"
+description = "Annexio : ajoute un rectangle rouge « Annexe X Folio n/N » sur les pages d'un PDF (100 % local)"
 license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "pdf-annexe"
+name = "annexio"
 path = "src/gui.rs"
 required-features = ["gui"]
 
+[build-dependencies]
+winresource = "0.1"
+
 [features]
 default = ["gui"]
-gui = ["dep:eframe", "dep:rfd", "dep:hayro", "dep:ureq", "dep:serde_json"]
+gui = ["dep:eframe", "dep:rfd", "dep:hayro"]
 wasm = ["dep:wasm-bindgen", "dep:serde", "dep:serde_json"]
 
 [dependencies]
@@ -25,7 +29,6 @@ serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 eframe = { version = "0.37", optional = true }
 rfd = { version = "0.18", optional = true }
-ureq = { version = "3", optional = true, features = ["platform-verifier"] }
 hayro = { version = "0.9", optional = true, features = ["embed-fonts"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
