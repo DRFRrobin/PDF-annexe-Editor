@@ -2,6 +2,11 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.8
+- Mise à jour intégrée à l'application : bouton « Rechercher une mise à jour » (manuel, aucun appel réseau au démarrage). Télécharge le fichier de la dernière release GitHub pour votre système, vérifie sa taille, remplace l'exécutable et propose de redémarrer.
+- Barre d'onglets en haut de l'application : « Fichier » et « Paramètres ».
+- Version Rust : plus de version en ligne de commande (application graphique uniquement) ; la release publie `pdf-annexe-<système>`.
+
 ## 1.1.7
 - Interface graphique complète (Rust, egui) : ouverture/glisser-déposer d'un PDF, aperçu, rectangle rouge déplaçable, réglages, génération. Les releases contiennent l'application (`pdf-annexe-<système>`) et la ligne de commande (`pdf-annexe-cli-<système>`).
 
