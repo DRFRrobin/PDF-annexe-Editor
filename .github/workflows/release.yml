@@ -18,14 +18,14 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            bin: pdf-annexe.exe
-            asset: pdf-annexe-windows-x86_64.exe
+            ext: .exe
+            suffix: windows-x86_64
           - os: ubuntu-latest
-            bin: pdf-annexe
-            asset: pdf-annexe-linux-x86_64
+            ext: ''
+            suffix: linux-x86_64
           - os: macos-latest
-            bin: pdf-annexe
-            asset: pdf-annexe-macos-arm64
+            ext: ''
+            suffix: macos-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -33,15 +33,17 @@ jobs:
         run: cargo test --release
         working-directory: rust
       - name: Build
-        run: cargo build --release
+        run: cargo build --release --features gui
         working-directory: rust
       - name: Renommer
         shell: bash
-        run: cp "rust/target/release/${{ matrix.bin }}" "${{ matrix.asset }}"
+        run: |
+          cp "rust/target/release/pdf-annexe${{ matrix.ext }}" "pdf-annexe-cli-${{ matrix.suffix }}${{ matrix.ext }}"
+          cp "rust/target/release/pdf-annexe-gui${{ matrix.ext }}" "pdf-annexe-${{ matrix.suffix }}${{ matrix.ext }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}
+          name: pdf-annexe-${{ matrix.suffix }}
+          path: pdf-annexe-*
 
   release:
     needs: build

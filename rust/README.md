@@ -4,7 +4,15 @@ Même fonction que l'app web : tampon rouge « Annexe X Folio n/N » sur les pag
 
 ## Téléchargement
 
-Les exécutables (Windows `.exe`, Linux, macOS) sont dans les [Releases](https://github.com/DRFRrobin/PDF-annexe-Editor/releases).
+L'application (`pdf-annexe-*`) et la ligne de commande (`pdf-annexe-cli-*`) pour Windows, Linux et macOS sont dans les [Releases](https://github.com/DRFRrobin/PDF-annexe-Editor/releases).
+
+## Application graphique
+
+`pdf-annexe-windows-x86_64.exe` (double-clic) : ouvrez ou glissez un PDF, placez le rectangle rouge avec la souris (glisser, ou clic sur la page), réglez le texte, puis « Générer le PDF… ».
+
+```bash
+cargo run --release --features gui --bin pdf-annexe-gui [fichier.pdf]
+```
 
 ## Programme en ligne de commande
 

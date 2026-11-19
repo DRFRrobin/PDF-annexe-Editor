@@ -100,6 +100,11 @@ pub fn text_width(text: &str, size: f32) -> f32 {
     text.chars().map(glyph_width).sum::<u32>() as f32 * size / 1000.0
 }
 
+/// Taille (largeur, hauteur) du rectangle en points pour un texte donné.
+pub fn box_size(text: &str, font_size: f32) -> (f32, f32) {
+    (text_width(text, font_size) + 2.0 * PAD + 2.0 * BORDER, font_size * 1.2 + 2.0 * PAD + 2.0 * BORDER)
+}
+
 /// Encodage WinAnsi (cp1252) pour la police standard ; `?` si impossible.
 fn win_ansi(text: &str) -> Vec<u8> {
     text.chars()
@@ -171,8 +176,7 @@ fn stamp_content(o: &Options, text: &str, bx: [f32; 4], rot: i64) -> Vec<u8> {
     let s = o.font_size;
     let (w, h) = (bx[2] - bx[0], bx[3] - bx[1]);
     let (vw, vh) = if rot % 180 != 0 { (h, w) } else { (w, h) };
-    let bw = text_width(text, s) + 2.0 * PAD + 2.0 * BORDER;
-    let bh = s * 1.2 + 2.0 * PAD + 2.0 * BORDER;
+    let (bw, bh) = box_size(text, s);
     let vx = (o.fx * vw).clamp(0.0, (vw - bw).max(0.0));
     let vy = (o.fy * vh).clamp(0.0, (vh - bh).max(0.0));
     // coin bas-gauche visuel (depuis le haut) -> repère PDF non tourné
