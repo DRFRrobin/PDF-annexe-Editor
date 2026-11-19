@@ -18,6 +18,8 @@ pub struct Settings {
     pub theme: u8,
     pub ui_scale: f32,
     pub thumbs: bool,
+    /// Vérifier les mises à jour au démarrage.
+    pub auto_update: bool,
     pub recents: Vec<String>,
 }
 
@@ -37,6 +39,7 @@ impl Default for Settings {
             theme: 0,
             ui_scale: 1.0,
             thumbs: true,
+            auto_update: true,
             recents: Vec::new(),
         }
     }
@@ -64,6 +67,7 @@ impl Settings {
         kv("theme", self.theme.to_string());
         kv("ui_scale", self.ui_scale.to_string());
         kv("thumbs", self.thumbs.to_string());
+        kv("auto_update", self.auto_update.to_string());
         for r in &self.recents {
             kv("recent", r.clone());
         }
@@ -89,6 +93,7 @@ impl Settings {
                 "theme" => s.theme = v.parse().unwrap_or(0).min(2),
                 "ui_scale" => s.ui_scale = v.parse::<f32>().unwrap_or(1.0).clamp(0.8, 2.0),
                 "thumbs" => s.thumbs = v == "true",
+                "auto_update" => s.auto_update = v != "false",
                 "recent" if !v.is_empty() => recents.push(v.to_string()),
                 _ => {}
             }
@@ -142,6 +147,7 @@ mod tests {
         s.annexe = "B".into();
         s.template = "Annexe {annexe} = page {n}".into(); // « = » dans la valeur
         s.theme = 2;
+        s.auto_update = false;
         s.ui_scale = 1.25;
         s.recents = vec!["C:\\a b\\c.pdf".into(), "/tmp/d.pdf".into()];
         assert_eq!(Settings::from_text(&s.to_text()), s);
