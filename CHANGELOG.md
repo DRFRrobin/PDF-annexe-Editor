@@ -2,6 +2,9 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.17
+- Application Rust : mise à jour automatique. Au démarrage, Annexio vérifie en arrière-plan s'il existe une release plus récente ; un bandeau propose « Mettre à jour » (ou « Plus tard »). Le fichier est téléchargé, contrôlé (taille + empreinte SHA-256 fournie par GitHub), puis remplace l'exécutable (l'ancien devient `.old`, supprimé au lancement suivant). Bouton « Redémarrer maintenant ». Désactivable dans Paramètres → Application, avec bouton « Rechercher une mise à jour ». Disponible à partir de cette version : les versions précédentes doivent être remplacées à la main une fois.
+
 ## 1.1.16
 - Le logiciel s'appelle désormais **Annexio** (web et Rust) : titre, fenêtre, exécutable `annexio-<système>`, bibliothèque, métadonnées de l'exe. Les réglages de l'ancien dossier `AnnexePDF` sont repris automatiquement. L'adresse du dépôt et du site web ne changent pas.
 
