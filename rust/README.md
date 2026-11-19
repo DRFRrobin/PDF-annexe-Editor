@@ -2,6 +2,10 @@
 
 Même fonction que l'app web : tampon rouge « Annexe X Folio n/N » sur les pages d'un PDF, 100 % local. Gère les pages tournées et les `MediaBox` décalées.
 
+## Téléchargement
+
+Les exécutables (Windows `.exe`, Linux, macOS) sont dans les [Releases](https://github.com/DRFRrobin/PDF-annexe-Editor/releases).
+
 ## Programme en ligne de commande
 
 ```bash
