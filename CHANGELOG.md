@@ -2,6 +2,9 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.6
+- Workflow de release : accepte les tags `v*` et `V*`, et peut être lancé à la main sur un tag existant.
+
 ## 1.1.5
 - Workflow GitHub Actions : à chaque tag `vX.Y.Z`, compile `pdf-annexe` (Windows .exe, Linux, macOS) et publie une release.
 

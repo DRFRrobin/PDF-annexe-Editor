@@ -2,8 +2,12 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', 'V*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag de la release existante à compléter (ex. V1.1.5)'
+        required: false
 
 permissions:
   contents: write
@@ -41,7 +45,7 @@ jobs:
 
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') || inputs.tag != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -49,5 +53,6 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: pdf-annexe-*
           generate_release_notes: true
