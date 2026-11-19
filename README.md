@@ -18,4 +18,4 @@ Le lien ci-dessus nécessite l'activation de GitHub Pages : Settings → Pages �
 
 ## Versions
 
-Version actuelle : **1.1.12** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).
+Version actuelle : **1.1.15** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).

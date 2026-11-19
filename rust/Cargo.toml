@@ -1,6 +1,6 @@
 [package]
 name = "pdf-annexe"
-version = "1.1.12"
+version = "1.1.15"
 edition = "2021"
 build = "build.rs"
 description = "Ajoute un rectangle rouge « Annexe X Folio n/N » sur les pages d'un PDF (100 % local)"

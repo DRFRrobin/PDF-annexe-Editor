@@ -10,17 +10,27 @@ Application de bureau (Windows, Linux, macOS) : ajoute dans un rectangle rouge, 
 
 ## Utilisation
 
-Barre d'onglets en haut :
-- **📄 Fichier** : ouvrir un PDF (bouton ou glisser-déposer), naviguer entre les pages, générer le PDF tamponné, fermer le fichier.
-- **⚙ Paramètres** : texte du tampon (`{annexe}`, `{n}`, `{total}`), premier folio, total, taille, pages concernées (ex. `1-3,5`), fond blanc ; section **Application** (version).
+Barre d'onglets en haut, barre d'état en bas (bouton **Générer le PDF…** toujours visible), miniatures des pages à gauche de l'aperçu.
 
-Le logo est l'icône de la fenêtre et de l'exe Windows.
+- **📄 Fichier** : ouvrir un PDF (Ctrl+O, bouton ou glisser-déposer), fichiers récents, navigation, fermer.
+- **⚙ Paramètres** :
+  - *Tampon* : texte (`{annexe}`, `{n}`, `{total}`) et modèles, premier folio, total, taille, pages concernées (Toutes / Paires / Impaires / Page courante ou `1-3,5`), fond blanc, annuler / rétablir.
+  - *Position* : coins, centre, marge.
+  - *Apparence* : thème Système / Clair / Sombre, taille de l'interface (80–200 %), miniatures.
+  - *Raccourcis clavier*.
 
-La largeur du panneau de gauche se règle en glissant sa bordure.
+Placez le rectangle rouge en le glissant, en cliquant sur la page, ou avec les flèches (1 pt, Maj : 10 pt). La position est la même (en proportion) sur toutes les pages.
 
-La molette de la souris (ou ↑ ↓, Page préc./suiv.) change de page dans l'aperçu.
+Aperçu : molette = changer de page ; Ctrl+molette ou boutons − / + = zoom (la molette fait défiler la page quand elle est agrandie) ; Page préc./suiv., Début/Fin = naviguer. La largeur du panneau de gauche se règle en glissant sa bordure.
 
-Placez le rectangle rouge en le glissant dans l'aperçu, ou en cliquant sur la page. La position est la même (en proportion) sur toutes les pages. Un PDF peut aussi être passé en argument ou « ouvert avec » l'application.
+| Raccourci | Action |
+|---|---|
+| Ctrl+O / Ctrl+S / Ctrl+W | Ouvrir / Générer / Fermer |
+| Ctrl+Z / Ctrl+Y | Annuler / Rétablir |
+| Ctrl + / Ctrl − | Taille de l'interface |
+| Échap | Quitter un champ de saisie |
+
+Les réglages (texte, position, thème, taille, fichiers récents) sont mémorisés dans un fichier local (`%APPDATA%\AnnexePDF\settings.txt` sous Windows). Un PDF peut aussi être passé en argument ou « ouvert avec » l'application.
 
 ## Développement
 

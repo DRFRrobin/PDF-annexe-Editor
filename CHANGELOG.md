@@ -2,6 +2,15 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.15
+- Application Rust : thème Système / Clair / Sombre et taille de l'interface réglable (80–200 %, Ctrl + / Ctrl − aussi), mémorisés.
+
+## 1.1.14
+- Application Rust : zoom de l'aperçu (boutons, Ctrl+molette, « Page entière » / « Largeur »), colonne de miniatures (pastille rouge = page tamponnée), réglages et fichiers récents mémorisés, annuler / rétablir (Ctrl+Z / Ctrl+Y), messages d'erreur plus clairs, refus d'écraser le fichier d'origine.
+
+## 1.1.13
+- Application Rust : barre du bas toujours visible (« Générer le PDF… », état, boutons « Ouvrir le PDF » / « Ouvrir le dossier » après génération), raccourcis (Ctrl+O, Ctrl+S, Ctrl+W, Échap, Début/Fin), positions rapides (coins, centre, marge), flèches pour ajuster le tampon (Maj : ×10), info-bulles, modèles de texte, boutons Toutes / Paires / Impaires / Page courante. Les flèches ↑ ↓ déplacent désormais le tampon (pages : molette, Page préc./suiv.).
+
 ## 1.1.12
 - Application Rust : suppression de tout lien avec GitHub (lien du dépôt et système de mise à jour intégré, qui interrogeait GitHub). L'application ne fait plus aucune requête réseau.
 
