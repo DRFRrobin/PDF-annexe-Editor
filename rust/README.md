@@ -12,6 +12,8 @@ Barre d'onglets en haut :
 - **📄 Fichier** : ouvrir un PDF (bouton ou glisser-déposer), naviguer entre les pages, générer le PDF tamponné, fermer le fichier.
 - **⚙ Paramètres** : texte du tampon (`{annexe}`, `{n}`, `{total}`), premier folio, total, taille, pages concernées (ex. `1-3,5`), fond blanc ; section **Application** (version, mise à jour, lien GitHub).
 
+La molette de la souris (ou ↑ ↓, Page préc./suiv.) change de page dans l'aperçu.
+
 Placez le rectangle rouge en le glissant dans l'aperçu, ou en cliquant sur la page. La position est la même (en proportion) sur toutes les pages. Un PDF peut aussi être passé en argument ou « ouvert avec » l'application.
 
 ### Mise à jour

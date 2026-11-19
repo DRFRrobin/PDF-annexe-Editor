@@ -14,6 +14,9 @@ mod update;
 
 const RED: Color32 = Color32::from_rgb(222, 0, 0);
 const PREVIEW_SCALE: f32 = 1.6;
+const SIDE_W: f32 = 290.0;
+/// Défilement cumulé (en points) pour changer de page : environ une encoche de molette.
+const WHEEL_STEP: f32 = 40.0;
 
 struct Page {
     image: egui::ColorImage,
@@ -49,6 +52,7 @@ enum Tab {
 
 struct App {
     tab: Tab,
+    wheel: f32,
     bytes: Option<Vec<u8>>,
     name: String,
     path: Option<PathBuf>,
@@ -85,6 +89,7 @@ impl Default for App {
         let opts = Options::default();
         App {
             tab: Tab::File,
+            wheel: 0.0,
             bytes: None,
             name: String::new(),
             path: None,
@@ -305,6 +310,7 @@ impl App {
             self.generate();
         }
         ui.small("Glissez le rectangle rouge, ou cliquez sur la page pour le placer.");
+        ui.small("Molette (ou ↑ ↓ / Page préc. / suiv.) : changer de page.");
         ui.separator();
         if ui.button("Fermer le PDF").clicked() {
             self.close();
@@ -346,6 +352,32 @@ impl App {
         ui.add_space(4.0);
         ui.hyperlink_to("Ouvrir le dépôt GitHub ↗", "https://github.com/DRFRrobin/PDF-annexe-Editor");
         ui.small("Tout reste sur votre ordinateur.");
+    }
+
+    /// Molette sur l'aperçu, ou PageSuivante/PagePrécédente/flèches : change de page.
+    fn navigate_pages(&mut self, ctx: &egui::Context) {
+        if self.bytes.is_none() || ctx.egui_wants_keyboard_input() && self.tab == Tab::Settings {
+            self.wheel = 0.0;
+            return;
+        }
+        let over_preview = ctx.pointer_hover_pos().is_some_and(|p| p.x > SIDE_W);
+        let (dy, key) = ctx.input(|i| {
+            let key = (i.key_pressed(egui::Key::PageDown) || i.key_pressed(egui::Key::ArrowDown)) as i32
+                - (i.key_pressed(egui::Key::PageUp) || i.key_pressed(egui::Key::ArrowUp)) as i32;
+            (if over_preview { i.smooth_scroll_delta.y } else { 0.0 }, key)
+        });
+        self.wheel -= dy; // molette vers le bas (dy < 0) = page suivante
+        let mut step = key;
+        if self.wheel.abs() >= WHEEL_STEP {
+            step += self.wheel.signum() as i32;
+            self.wheel = 0.0;
+        }
+        if step != 0 {
+            let target = (self.cur as i32 + step.signum()).clamp(0, self.n_pages as i32 - 1) as usize;
+            if target != self.cur {
+                self.goto(target);
+            }
+        }
     }
 
     fn close(&mut self) {
@@ -422,6 +454,7 @@ impl App {
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.poll_update();
+        self.navigate_pages(ui.ctx());
         let dropped = ui.ctx().input(|i| i.raw.dropped_files.iter().map(|f| f.path().to_path_buf()).next());
         if let Some(p) = dropped {
             self.open(p);
@@ -431,7 +464,7 @@ impl eframe::App for App {
             self.tabs_bar(ui);
             ui.add_space(4.0);
         });
-        egui::Panel::left("panel").resizable(false).exact_size(290.0).show(ui, |ui| self.side_panel(ui));
+        egui::Panel::left("panel").resizable(false).exact_size(SIDE_W).show(ui, |ui| self.side_panel(ui));
         egui::CentralPanel::default().show(ui, |ui| self.preview(ui));
     }
 }

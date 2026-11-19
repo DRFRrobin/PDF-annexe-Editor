@@ -2,6 +2,9 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.9
+- Application Rust : la molette de la souris (ou ↑ ↓ / Page préc. / Page suiv.) fait défiler les pages dans l'aperçu.
+
 ## 1.1.8
 - Mise à jour intégrée à l'application : bouton « Rechercher une mise à jour » (manuel, aucun appel réseau au démarrage). Télécharge le fichier de la dernière release GitHub pour votre système, vérifie sa taille, remplace l'exécutable et propose de redémarrer.
 - Barre d'onglets en haut de l'application : « Fichier » et « Paramètres ».
