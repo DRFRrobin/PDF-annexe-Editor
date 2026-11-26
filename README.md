@@ -11,7 +11,7 @@
 | **1 · Fichier** | ouvrir le PDF (bouton, `Ctrl+O` ou glisser-déposer) |
 | **2 · ReeMaker** | cartouche à 3 lignes (« Site de … » · REE | indice · Folio | type d'arrêt), posé page par page, folios continus, orientation automatique selon le sens du texte |
 | **3 · Annexio** | tampon d'une ligne « Annexe X Folio n/N » |
-| **4 · Export** | un seul PDF avec les deux tampons ; le fichier d'origine n'est jamais modifié ; **nom automatique** d'après ReeMaker (ex. `REE JPJ 701 Tr 0 Ind A.pdf`, modèle réglable dans ⚙) |
+| **4 · Export** | un seul PDF avec les deux tampons ; le fichier d'origine n'est jamais modifié ; **nom automatique** d'après ReeMaker (ex. `Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A.pdf`, modèle réglable dans ⚙) |
 
 Les étapes ReeMaker et Annexio sont facultatives et se cumulent ; rien n'est écrit avant l'export. Clavier : `Alt+1…4` étapes, `Entrée` ou clic droit valider une page, flèches ajuster le tampon (`Maj` : ×10), `Page préc./suiv.` changer de page, `Ctrl+molette` zoom, `Alt+,` paramètres.
 
@@ -29,4 +29,4 @@ Le lien ci-dessus nécessite l'activation de GitHub Pages : Settings → Pages �
 
 ## Versions
 
-Version actuelle : **1.1.21** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).
+Version actuelle : **1.1.22** (affichée dans l'en-tête de l'app). Chaque mise à jour ajoute 0.0.1 ; voir [CHANGELOG.md](CHANGELOG.md).

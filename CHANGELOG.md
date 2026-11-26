@@ -2,6 +2,10 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.22
+- **Nom du PDF exporté (web et Rust)** : il commence maintenant par les folios du cartouche ReeMaker — `Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A.pdf` (`Folio 36 de …` s'il n'y a qu'une page). Ce sont les folios posés par ReeMaker (première et dernière page foliotée), pas ceux du tampon Annexio. Sans foliotage, le nom reste `REE … Tr … Ind ….pdf`.
+- Nouvelle variable `{folios}` du modèle (« 36 à 54 ») ; modèle par défaut : `[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]`. L'ancien modèle par défaut, s'il était mémorisé, est remplacé automatiquement ; un modèle personnalisé n'est pas touché.
+
 ## 1.1.21
 - **Application Rust : même parcours que la version web** — barre à chevrons Fichier → ReeMaker → Annexio → Export (Alt+1…4), ⚙ Paramètres en fenêtre (apparence, tampons, modèle de nom, mises à jour, raccourcis).
 - Étape **ReeMaker** : cartouche à 3 lignes dessiné en vectoriel dans le PDF (rotation de page gérée), foliotage page par page (clic = placer, Entrée / clic droit = valider, Passer, Précédente, Pivoter, Tampon −/+, garder la position, Annuler), folios continus sans trou, zoom, orientation 0/90/180/270° ou **automatique** (sens de lecture du texte lu dans le contenu de la page).

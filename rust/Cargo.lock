@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "annexio"
-version = "1.1.21"
+version = "1.1.22"
 dependencies = [
  "eframe",
  "getrandom 0.4.3",
