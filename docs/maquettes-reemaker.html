@@ -103,6 +103,21 @@ th { background:var(--soft); font-size:10.5px; }
 .vl { position:absolute; top:8%; bottom:8%; width:2.5px; background:#d7dbe3; border-radius:1px; }
 .bad { position:absolute; left:0; right:0; bottom:-17px; text-align:center; font-size:9px; font-weight:700; }
 .win.big { font-size:10.5px; }
+.win { position:relative; }
+.menubtn { background:#2d2d2d; border:1px solid #444; border-radius:5px; padding:1px 8px; color:#eee; }
+.menubtn.on { background:#3a3a3a; border-color:#888; }
+.sepv { width:1px; height:14px; background:#444; margin:0 2px; }
+.filebar { display:flex; gap:9px; align-items:center; padding:3px 9px; background:#242424; border-bottom:1px solid #303030; }
+.filebar .sp { margin-left:auto; display:flex; gap:6px; }
+.nb { display:inline-block; background:var(--red); color:#fff; border-radius:50%; width:13px; height:13px; line-height:13px; text-align:center; font-size:8px; font-weight:700; font-style:normal; margin-left:4px; vertical-align:1px; }
+.dd { position:absolute; background:#2a2a2a; border:1px solid #666; border-radius:6px; padding:4px 0; box-shadow:0 6px 18px #000a; z-index:5; min-width:190px; font-size:10px; }
+.dd div { padding:3px 12px; display:flex; justify-content:space-between; gap:18px; }
+.dd div.sel { background:var(--acc); }
+.dd .k { color:#9a9a9a; }
+.dd hr { border:0; border-top:1px solid #444; margin:3px 0; }
+.subnav { width:150px; border-right:1px solid #333; padding:8px 6px; background:#1c1c1c; }
+.subnav div { padding:4px 9px; border-radius:5px; margin-bottom:2px; }
+.subnav div.on { background:var(--acc); color:#fff; }
 .kbd { display:inline-block; border:1px solid #c3c9d6; border-bottom-width:2px; background:#fff; border-radius:4px; padding:0 5px; font-size:9.5px; font-family:inherit; }
 </style>
 </head>
@@ -123,12 +138,12 @@ th { background:var(--soft); font-size:10.5px; }
     <div class="cols" style="max-width:215mm">
       <div class="card" style="flex:1"><h3>1 · Analyse</h3><p>Ce que fait ReeMaker++ d'après vos 3 captures, écran par écran.</p></div>
       <div class="card" style="flex:1"><h3>2 · Le cartouche</h3><p>Anatomie, variables, 4 orientations, tampons personnalisés.</p></div>
-      <div class="card" style="flex:1"><h3>3 · Maquettes</h3><p>Onglet, foliotage page par page, tampons personnalisés, paramètres.</p></div>
+      <div class="card" style="flex:1"><h3>3 · Menus et maquettes</h3><p>Structure des menus, onglet ReeMaker, foliotage page par page, tampons personnalisés, paramètres.</p></div>
       <div class="card" style="flex:1"><h3>4 · Plan</h3><p>Étapes de livraison, tests, questions à valider.</p></div>
     </div>
   </div>
   <div style="position:absolute; left:15mm; bottom:20mm; color:var(--mut); font-size:11px">
-    Document de conception — Annexio, version actuelle 1.1.17 · version prévue pour le premier lot : 1.1.18<br>
+    Document de conception — Annexio, version actuelle 1.1.17 · premier lot prévu : 1.1.18 (menus)<br>
     Toutes les valeurs des maquettes sont <b>fictives</b> (site, REE, etc.). Les photos d'origine ne sont pas reprises.
   </div>
   <div style="position:absolute; right:22mm; top:44mm" >
@@ -187,7 +202,155 @@ th { background:var(--soft); font-size:10.5px; }
       <div class="q"><b>À ne pas deviner :</b> le sens exact des sigles (REE, PEE, TEM, tranche, cycle). Ils seront traités comme des <b>champs libres</b> ; seul leur affichage dans le cartouche compte.</div>
     </div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>2 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>2 / 11</span></div>
+</section>
+
+<!-- ══════════ MENUS 1 ══════════ -->
+<section class="page">
+  <h2><span class="tag">MENUS</span>Une structure cohérente : 3 outils, 1 fichier, 1 réglage</h2>
+  <p class="sub">Aujourd'hui « Fichier » est un onglet comme les autres alors qu'il concerne tous les outils. Ajouter ReeMaker tel quel créerait deux logiques différentes.</p>
+  <div class="cols">
+    <div style="flex:1">
+      <h3>Si on ajoutait ReeMaker sans rien changer</h3>
+      <div class="win" style="height:auto"><div class="tabs"><span class="h">Annexio</span><span class="tab on">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab">🗂 ReeMaker</span></div></div>
+      <ul style="margin-top:5px">
+        <li><b>Fichier</b> est un onglet, alors qu'ouvrir/fermer vaut pour tous les outils.</li>
+        <li>Le tampon « Annexe X Folio n/N » se règle dans <b>Paramètres</b>, mais ReeMaker dans <b>son onglet</b> : deux logiques.</li>
+        <li>Deux endroits pour « Ouvrir » (onglet Fichier et formulaire ReeMaker).</li>
+      </ul>
+      <h3 style="margin-top:12px">Structure proposée</h3>
+      <div class="win" style="height:auto"><div class="tabs"><span class="h">Annexio</span><span class="menubtn">☰ Fichier ⌄</span><span class="sepv"></span><span class="tab on">Annexe</span><span class="tab">🗂 ReeMaker</span><span class="tab">⚙ Paramètres</span></div><div class="filebar"><span>📄 <b>FNC 228 exemple.pdf</b> · 12 pages</span><span class="btn">‹</span><span>Page 1/12</span><span class="btn">›</span><span class="sp"><span class="btn">Récents ⌄</span><span class="btn">Fermer ✕</span></span></div></div>
+      <div class="card" style="margin-top:8px">
+        <ol style="margin:0;padding-left:18px">
+          <li><b>Un outil = un onglet.</b> L'onglet contient le formulaire du document en cours (<b>Annexe</b> ou <b>ReeMaker</b>).</li>
+          <li><b>Paramètres = préférences durables</b> (apparence, mises à jour, listes ReeMaker…), jamais le travail en cours.</li>
+          <li><b>Le fichier est global</b> : un menu « ☰ Fichier » et une bande qui reste sous les onglets ; l'aperçu, les miniatures et la barre du bas sont communs.</li>
+        </ol>
+      </div>
+      <div class="note">Raccourcis : <span class="kbd">Ctrl</span>+<span class="kbd">1</span> Annexe · <span class="kbd">Ctrl</span>+<span class="kbd">2</span> ReeMaker · <span class="kbd">Ctrl</span>+<span class="kbd">3</span> Paramètres.</div>
+    </div>
+    <div style="flex:1.05">
+      <h3>Où se trouve chaque fonction</h3>
+      <table style="font-size:10.5px">
+        <tr><th>Fonction</th><th>Emplacement proposé</th><th style="width:22%">Avant</th></tr>
+        <tr><td>Ouvrir · récents · fermer</td><td>Menu <b>Fichier</b> + bande fichier</td><td>onglet Fichier</td></tr>
+        <tr><td>Navigation de pages</td><td>Bande fichier, molette, miniatures</td><td>onglet Fichier</td></tr>
+        <tr><td>Texte « Annexe X Folio n/N », folio, taille, pages</td><td>Onglet <b>Annexe</b></td><td>Paramètres</td></tr>
+        <tr><td>Position (coins, marge, flèches)</td><td>Onglets <b>Annexe</b> et <b>ReeMaker</b></td><td>Paramètres</td></tr>
+        <tr><td>Formulaire du cartouche</td><td>Onglet <b>ReeMaker</b></td><td>— (nouveau)</td></tr>
+        <tr><td>Générer / enregistrer</td><td>Barre du bas · Fichier ▸ Enregistrer</td><td>onglet Fichier</td></tr>
+        <tr><td>Annuler / rétablir</td><td>En haut du formulaire de chaque outil (↶ ↷, Ctrl+Z / Ctrl+Y)</td><td>Paramètres</td></tr>
+        <tr><td>Thème, taille, miniatures</td><td>Paramètres ▸ <b>Apparence</b></td><td>Paramètres</td></tr>
+        <tr><td>Mises à jour</td><td>Paramètres ▸ <b>Mises à jour</b></td><td>Paramètres</td></tr>
+        <tr><td>Listes, style, tampons perso ReeMaker</td><td>Paramètres ▸ <b>ReeMaker</b></td><td>— (nouveau)</td></tr>
+        <tr><td>Raccourcis · version</td><td>Paramètres ▸ <b>Raccourcis</b> / <b>À propos</b></td><td>Paramètres</td></tr>
+      </table>
+      <div class="q" style="margin-top:7px">« Annexe » devient le nom de l'outil actuel (tampon sur une ligne). Convient-il, ou préférez-vous un autre nom (« Tampon », « Folio »…) ?</div>
+    </div>
+  </div>
+  <h3 style="margin-top:12px">Parcours type</h3>
+  <div class="flow">
+    <div class="step"><b>1 · Ouvrir</b>Ctrl+O, ou menu ☰ Fichier, ou glisser le PDF dans la fenêtre.</div><div class="arrow">▶</div>
+    <div class="step"><b>2 · Choisir l'outil</b>Onglet Annexe (tampon sur une ligne) ou ReeMaker (cartouche) — Ctrl+1 / Ctrl+2.</div><div class="arrow">▶</div>
+    <div class="step"><b>3 · Régler et placer</b>Formulaire à gauche, tampon glissé dans l'aperçu, flèches pour ajuster.</div><div class="arrow">▶</div>
+    <div class="step"><b>4 · Générer</b>Barre du bas ou Ctrl+S → « Enregistrer sous », puis « Ouvrir le PDF / le dossier ».</div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>3 / 11</span></div>
+</section>
+
+<!-- ══════════ MENUS 2 ══════════ -->
+<section class="page">
+  <h2><span class="tag">MENUS</span>L'application complète : onglet « Annexe » et menu Fichier ouvert</h2>
+  <p class="sub">Même fenêtre pour tous les outils : seule la colonne de gauche change d'un onglet à l'autre.</p>
+  <div class="win big" style="height:134mm;font-size:11px">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+    <div class="tabs"><span class="h">Annexio</span><span class="menubtn on">☰ Fichier ⌄</span><i class="nb">1</i><span class="sepv"></span><span class="tab on">Annexe</span><span class="tab">🗂 ReeMaker</span><span class="tab">⚙ Paramètres</span><i class="nb">2</i><span class="v">v1.1.18</span></div>
+    <div class="filebar"><span>📄 <b>FNC 228 exemple.pdf</b> · 12 pages</span><i class="nb">3</i><span class="btn">‹</span><span>Page 1/12</span><span class="btn">›</span><span class="hint">Ctrl+O ouvrir · Ctrl+W fermer</span><span class="sp"><span class="btn">Récents ⌄</span><span class="btn">Fermer ✕</span></span></div>
+    <div class="dd" style="left:68px;top:56px">
+      <div class="sel"><span>📂 Ouvrir un PDF…</span><span class="k">Ctrl+O</span></div>
+      <div><span>🕘 Ouvrir un fichier récent</span><span class="k">▸</span></div>
+      <hr><div><span>💾 Générer / Enregistrer sous…</span><span class="k">Ctrl+S</span></div>
+      <div><span>📁 Ouvrir le dossier du fichier</span><span class="k"></span></div>
+      <hr><div><span>✕ Fermer le PDF</span><span class="k">Ctrl+W</span></div>
+      <div><span>⏻ Quitter</span><span class="k">Ctrl+Q</span></div>
+    </div>
+    <div class="body">
+      <div class="left" style="--lw:290px">
+        <div class="sec" style="margin-top:0">Tampon « Annexe X Folio n/N » <i class="nb">4</i></div>
+        <div class="row2"><div style="flex:1"><div class="lab" style="margin-top:0">Annexe (X)</div><div class="inp">1</div></div><div style="flex:1"><div class="lab" style="margin-top:0">Premier folio</div><div class="inp">1</div></div></div>
+        <div class="lab">Texte</div><div class="inp">Annexe {annexe} Folio {n}/{total} ⌄</div>
+        <div class="row2"><div style="flex:1"><div class="lab">Total (N)</div><div class="inp dis">auto</div></div><div style="flex:1"><div class="lab">Taille (pt)</div><div class="inp">14</div></div></div>
+        <div class="lab">Pages</div><div class="inp dis">toutes</div>
+        <div class="row2" style="margin-top:3px"><span class="btn">Toutes</span><span class="btn">Paires</span><span class="btn">Impaires</span><span class="btn">Courante</span></div>
+        <div style="margin-top:6px"><i class="cb on"></i>Fond blanc</div>
+        <div class="sec">Position</div>
+        <div class="row2"><span class="btn">↖ Haut gauche</span><span class="btn">Haut droite ↗</span></div>
+        <div class="row2" style="margin-top:3px"><span class="btn">Centre</span><span class="btn">↙ Bas gauche</span><span class="btn">Bas droite ↘</span></div>
+        <div class="row2" style="margin-top:5px">Marge <span class="inp" style="width:46px">20 pt</span><span class="btn" style="margin-left:auto">↶</span><span class="btn">↷</span></div>
+      </div>
+      <div class="thumbs"><div class="th"><i></i><span>1</span></div><div class="th"><i></i><span>2</span></div><div class="th cur"><i></i><span>3</span></div><div class="th"><i></i><span>4</span></div></div>
+      <div class="prev">
+        <div class="zoom"><span class="btn">−</span><span style="color:#999">90 %</span><span class="btn">+</span><span class="btn blue">Page entière</span><span class="btn">Largeur</span><i class="nb">6</i></div>
+        <div class="sheet" style="width:262px;height:371px">
+          <div class="bl" style="left:12px;top:12px;width:56px;height:34px;background:#cfd6e2"></div>
+          <div class="ln" style="top:62px"></div><div class="ln" style="top:71px;right:30%"></div><div class="ln" style="top:80px"></div>
+          <div class="bl" style="left:12px;right:12px;top:106px;height:84px"></div>
+          <div class="ln" style="top:208px"></div><div class="ln" style="top:217px"></div><div class="ln" style="top:226px;right:40%"></div>
+          <div style="position:absolute;right:10px;top:10px"><div style="display:inline-block;border:1.2px solid var(--red);color:var(--red);background:#fff;font-family:FreeSans,Arial,sans-serif;font-size:9px;padding:2px 7px;white-space:nowrap">Annexe 1 Folio 3/12</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bar"><i class="nb" style="margin:0 4px 0 0">7</i><span class="ok">« FNC 228 exemple.pdf » chargé (12 page(s)).</span><span class="sp"><span>Page 3/12</span><span class="btn red">Générer le PDF…</span></span></div>
+  </div>
+  <div class="cols" style="margin-top:7px">
+    <ol class="legend" style="flex:1;font-size:11px;margin:0"><li><b>Menu Fichier</b> : ouvrir, récents, enregistrer, fermer, quitter</li><li><b>Onglets d'outils</b> : Annexe · ReeMaker · Paramètres</li><li><b>Bande fichier</b> : nom, pages, navigation, fermer (commune)</li></ol>
+    <ol class="legend" style="flex:1;font-size:11px;margin:0;counter-reset:n 3"><li><b>Formulaire de l'outil</b> actif (seule zone qui change)</li><li><b>Miniatures</b> (pastille rouge = page tamponnée)</li><li><b>Aperçu</b> et zoom, communs à tous les outils</li><li><b>Barre du bas</b> : état + action (« Générer… » ; « Démarrer / Enregistrer » pour ReeMaker)</li></ol>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>4 / 11</span></div>
+</section>
+
+<!-- ══════════ MENUS 3 ══════════ -->
+<section class="page">
+  <h2><span class="tag">MENUS</span>L'onglet « Paramètres » : une liste de sections</h2>
+  <p class="sub">Les préférences durables sont regroupées par thème, au lieu d'une longue colonne. La bande fichier reste visible mais l'aperçu laisse la place aux réglages.</p>
+  <div class="cols">
+    <div style="flex:1.7">
+      <div class="win big" style="height:142mm;font-size:12px">
+        <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+        <div class="tabs"><span class="h">Annexio</span><span class="menubtn">☰ Fichier ⌄</span><span class="sepv"></span><span class="tab">Annexe</span><span class="tab">🗂 ReeMaker</span><span class="tab on">⚙ Paramètres</span><span class="v">v1.1.18</span></div>
+        <div class="filebar"><span>📄 <b>FNC 228 exemple.pdf</b> · 12 pages</span><span class="btn">‹</span><span>Page 1/12</span><span class="btn">›</span><span class="hint">Ctrl+O ouvrir · Ctrl+W fermer</span><span class="sp"><span class="btn">Récents ⌄</span><span class="btn">Fermer ✕</span></span></div>
+        <div class="body">
+          <div class="subnav" style="width:170px"><div class="on">🎨 Apparence</div><div>🔖 Annexe</div><div>🗂 ReeMaker</div><div>⬆ Mises à jour</div><div>⌨ Raccourcis</div><div>ℹ À propos</div></div>
+          <div style="flex:1;padding:12px 16px;overflow:hidden">
+            <div class="sec" style="margin-top:0;font-size:12.5px">Apparence</div>
+            <div class="lab">Thème</div>
+            <div class="row2"><span class="btn blue">Système</span><span class="btn">Clair</span><span class="btn">Sombre</span></div>
+            <div class="lab">Taille de l'interface</div>
+            <div class="row2"><span style="display:inline-block;width:170px;height:5px;background:#444;border-radius:3px;position:relative"><span style="position:absolute;left:34px;top:-4px;width:13px;height:13px;border-radius:50%;background:#ddd"></span></span><span class="inp" style="width:60px">100 %</span><span class="btn">100 %</span></div>
+            <div style="margin-top:9px"><i class="cb on"></i>Afficher les miniatures des pages</div>
+            <div class="sec" style="font-size:12.5px;margin-top:14px">Aperçu</div>
+            <div class="lab">Zoom par défaut</div><div class="row2"><span class="btn blue">Page entière</span><span class="btn">Largeur</span></div>
+            <div style="margin-top:9px"><i class="cb on"></i>La molette change de page (quand la page n'est pas agrandie)</div>
+          </div>
+        </div>
+        <div class="bar"><span class="ok">« FNC 228 exemple.pdf » chargé (12 page(s)).</span><span class="sp"><span class="btn red">Générer le PDF…</span></span></div>
+      </div>
+    </div>
+    <div style="flex:.8">
+      <h3>Contenu de chaque section</h3>
+      <table style="font-size:10.5px">
+        <tr><td><b>🎨 Apparence</b></td><td>Thème, taille de l'interface, miniatures, zoom par défaut</td></tr>
+        <tr><td><b>🔖 Annexe</b></td><td>Valeurs par défaut du tampon actuel : texte, taille, fond, marge</td></tr>
+        <tr><td><b>🗂 ReeMaker</b></td><td>Sites, types d'arrêt, tranches, style du cartouche, modèle des 3 lignes, tampons personnalisés</td></tr>
+        <tr><td><b>⬆ Mises à jour</b></td><td>Vérifier au démarrage, rechercher maintenant, version installée</td></tr>
+        <tr><td><b>⌨ Raccourcis</b></td><td>Liste complète (lecture seule)</td></tr>
+        <tr><td><b>ℹ À propos</b></td><td>Version, dossier des réglages, licence</td></tr>
+      </table>
+      <div class="note">Règle : un réglage qui change <b>à chaque document</b> (annexe, site, folio de départ…) est dans l'<b>onglet de l'outil</b> ; un réglage qu'on fait <b>une fois</b> est ici.</div>
+      <div class="q">« Annexe » (valeurs par défaut) évite de ressaisir le texte et la taille à chaque lancement ; l'onglet Annexe les reprend au démarrage.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>5 / 11</span></div>
 </section>
 
 <!-- ══════════ 3. CARTOUCHE ══════════ -->
@@ -238,20 +401,19 @@ th { background:var(--soft); font-size:10.5px; }
     <div class="card" style="flex:1"><h3>Position</h3><p>Coin haut-gauche mémorisé <b>en proportion de la page</b> ; le cartouche reste dans la page (pas de débordement).</p></div>
     <div class="card" style="flex:1"><h3>Fond</h3><p>Fond blanc optionnel (déjà présent dans Annexio) pour masquer ce qu'il recouvre.</p></div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>3 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>6 / 11</span></div>
 </section>
 
 <!-- ══════════ 4. MAQUETTE : ONGLET ══════════ -->
 <section class="page">
   <h2><span class="tag">MAQUETTE 1</span>Le nouvel onglet « ReeMaker » (avant de démarrer)</h2>
-  <p class="sub">Il s'ajoute à la barre d'onglets, à côté de Fichier et Paramètres. L'aperçu montre déjà le cartouche tel qu'il sera posé.</p>
-  <div class="win big" style="height:131mm">
+  <p class="sub">Il s'ajoute à la barre d'onglets, entre Annexe et Paramètres. L'aperçu montre déjà le cartouche tel qu'il sera posé.</p>
+  <div class="win big" style="height:141mm">
     <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
-    <div class="tabs"><span class="h">Annexio</span><span class="tab">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab on new">🗂 ReeMaker</span><span class="v">v1.1.18</span></div>
+    <div class="tabs"><span class="h">Annexio</span><span class="menubtn">☰ Fichier ⌄</span><span class="sepv"></span><span class="tab">Annexe</span><span class="tab on new">🗂 ReeMaker</span><span class="tab">⚙ Paramètres</span><span class="v">v1.1.18</span></div><div class="filebar"><span>📄 <b>FNC 228 exemple.pdf</b> · 12 pages</span><span class="btn">‹</span><span>Page 1/12</span><span class="btn">›</span><span class="hint">Ctrl+O ouvrir · Ctrl+W fermer</span><span class="sp"><span class="btn">Récents ⌄</span><span class="btn">Fermer ✕</span></span></div>
     <div class="body">
       <div class="left" style="--lw:318px">
-        <div class="row2"><div class="btn" style="flex:none">📂 Ouvrir un PDF…</div><div class="inp" style="flex:1">FNC 228 exemple.pdf — 12 p.</div></div>
-        <div class="sec">Dossier</div>
+        <div class="sec" style="margin-top:0">Dossier</div>
         <div class="row2"><div style="flex:2"><div class="lab" style="margin-top:0">Site</div><div class="inp">SITE EXEMPLE</div></div><div style="flex:1.4"><div class="lab" style="margin-top:0">R.E.E.</div><div class="inp">REE 001</div></div><div style="flex:.6"><div class="lab" style="margin-top:0">Indice</div><div class="inp">A</div></div></div>
         <div class="row2" style="margin-top:2px"><div style="flex:1.3"><div class="lab">Folio de départ</div><div class="inp">46 ⇅</div></div><div style="flex:1.3"><div class="lab">Type d'arrêt</div><div class="inp">TEM ⌄</div></div><div style="flex:1"><div class="lab">Cycle</div><div class="inp dis">36 ⇅</div></div></div>
         <div class="sec">Pages à folioter</div>
@@ -283,16 +445,16 @@ th { background:var(--soft); font-size:10.5px; }
     <div class="card" style="flex:1"><h3>Plus pratique</h3><p>« Folios 46 à 57 » affiché d'avance ; cartouche mis à jour en direct dans l'aperçu ; réglages mémorisés d'une session à l'autre.</p></div>
     <div class="card" style="flex:1"><h3>Champs conditionnels</h3><p>Cycle grisé tant que le type d'arrêt ne l'exige pas (hypothèse) ; « Pages de … à … » grisé tant que « Totalité » est choisi.</p></div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>4 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>7 / 11</span></div>
 </section>
 
 <!-- ══════════ 5. MAQUETTE : FOLIOTAGE PAGE PAR PAGE ══════════ -->
 <section class="page">
   <h2><span class="tag">MAQUETTE 2</span>Foliotage page par page</h2>
   <p class="sub">Même principe que ReeMaker++ (placer, valider, page suivante), avec en plus de quoi aller vite et corriger.</p>
-  <div class="win big" style="height:131mm">
+  <div class="win big" style="height:136mm">
     <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
-    <div class="tabs"><span class="h">Annexio</span><span class="tab">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab on">🗂 ReeMaker</span><span class="v">v1.1.18</span></div>
+    <div class="tabs"><span class="h">Annexio</span><span class="menubtn">☰ Fichier ⌄</span><span class="sepv"></span><span class="tab">Annexe</span><span class="tab on">🗂 ReeMaker</span><span class="tab">⚙ Paramètres</span><span class="v">v1.1.18</span></div><div class="filebar"><span>📄 <b>FNC 228 exemple.pdf</b> · 12 pages</span><span class="btn">‹</span><span>Page 1/12</span><span class="btn">›</span><span class="hint">Ctrl+O ouvrir · Ctrl+W fermer</span><span class="sp"><span class="btn">Récents ⌄</span><span class="btn">Fermer ✕</span></span></div>
     <div class="banner" style="font-size:11px"><b>Foliotage en cours</b><span>Page <b>3 / 12</b> · Folio <b>48</b></span><span style="margin-left:auto" class="btn">Annuler le foliotage</span></div>
     <div class="body">
       <div class="left" style="--lw:250px">
@@ -328,7 +490,7 @@ th { background:var(--soft); font-size:10.5px; }
     <div class="card" style="flex:1"><h3>Aller vite</h3><p><b>Garder la position</b> (cochée par défaut) : les pages semblables se valident d'un seul Entrée. Miniatures avec ✔ sur les pages faites.</p></div>
     <div class="card" style="flex:1"><h3>À la dernière page</h3><p>Bandeau « Terminé — Enregistrer… » → dialogue « Enregistrer sous » (<i>…_folioté.pdf</i>), puis <b>Ouvrir le PDF / le dossier</b>. <span class="pill">hypothèse : clic gauche = placer, clic droit = valider</span></p></div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>5 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>8 / 11</span></div>
 </section>
 
 <!-- ══════════ 6. MAQUETTE : PAGES PIVOTÉES + TAMPONS PERSO ══════════ -->
@@ -393,7 +555,7 @@ th { background:var(--soft); font-size:10.5px; }
       <div class="q" style="margin-top:6px">Sur votre capture, les deux emplacements sont <b>vides</b>. Je prévois un éditeur simple (lignes × 2 cellules, variables). Dites-moi si vous aviez un autre usage en tête.</div>
     </div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>6 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>9 / 11</span></div>
 </section>
 
 <!-- ══════════ 8. MAQUETTE : PARAMÈTRES + FIN ══════════ -->
@@ -403,7 +565,7 @@ th { background:var(--soft); font-size:10.5px; }
   <div class="cols" style="gap:16px">
     <div style="flex:1">
       <div class="win big" style="padding:12px;font-size:11px">
-        <div class="sec" style="margin-top:0;font-size:12px">Paramètres ReeMaker <span class="hint">(dans l'onglet Paramètres existant)</span></div>
+        <div class="sec" style="margin-top:0;font-size:12px">Paramètres ▸ ReeMaker <span class="hint">(section de l'onglet Paramètres)</span></div>
         <div class="lab">Sites proposés</div>
         <div class="inp" style="padding:3px 6px">SITE EXEMPLE ⌄ <span class="hint">· + ajouter · − retirer</span></div>
         <div class="lab">Types d'arrêt</div>
@@ -426,7 +588,7 @@ th { background:var(--soft); font-size:10.5px; }
     <div style="flex:1.12">
       <div class="win big" style="height:80mm;font-size:11px">
         <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
-        <div class="tabs"><span class="h">Annexio</span><span class="tab">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab on">🗂 ReeMaker</span></div>
+        <div class="tabs"><span class="h">Annexio</span><span class="menubtn">☰ Fichier ⌄</span><span class="sepv"></span><span class="tab">Annexe</span><span class="tab on">🗂 ReeMaker</span><span class="tab">⚙ Paramètres</span><span class="v">v1.1.18</span></div><div class="filebar"><span>📄 <b>FNC 228 exemple.pdf</b> · 12 pages</span><span class="sp"><span class="btn">Fermer ✕</span></span></div>
         <div class="banner" style="background:#10281b;border-color:#1e6a45;color:#7be3ab;font-size:11px"><b>✔ Foliotage terminé</b><span>12 pages · folios 46 à 57</span></div>
         <div style="padding:10px 12px;flex:1">
           <div class="row2"><span class="btn red" style="padding:4px 11px">Enregistrer le PDF folioté…</span><span class="btn" style="padding:4px 10px">↩ Reprendre le foliotage</span></div>
@@ -452,7 +614,7 @@ th { background:var(--soft); font-size:10.5px; }
     <div class="step"><b>2 · Foliotage</b>Page par page : placer, valider. « Annuler » revient à 1 sans rien écrire.</div><div class="arrow">▶</div>
     <div class="step"><b>3 · Terminé</b>« Enregistrer… », puis Ouvrir le PDF / le dossier. « Reprendre » revient à 2.</div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>7 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>10 / 11</span></div>
 </section>
 
 <!-- ══════════ 9. PLAN ET QUESTIONS ══════════ -->
@@ -464,8 +626,9 @@ th { background:var(--soft); font-size:10.5px; }
       <h3>Étapes de livraison (une version = +0,0.1)</h3>
       <table>
         <tr><th style="width:15%">Version</th><th>Contenu</th></tr>
-        <tr><td><b>1.1.18</b></td><td>Brique « cartouche » (dessin vectoriel en tableau, 4 orientations, zoom, pages pivotées) + onglet <b>ReeMaker</b> : formulaire, aperçu en direct, foliotage page par page, enregistrement.</td></tr>
-        <tr><td><b>1.1.19</b></td><td><b>Tampons personnalisés</b> 1 et 2 + réglages ReeMaker (listes, style, modèle des lignes).</td></tr>
+        <tr><td><b>1.1.18</b></td><td><b>Menus</b> : nouvelle barre (menu ☰ Fichier, onglets Annexe · ReeMaker · Paramètres, bande fichier, Paramètres par sections, Ctrl+1/2/3). Aucune nouvelle fonction : on réorganise l'existant.</td></tr>
+        <tr><td><b>1.1.19</b></td><td>Brique « cartouche » (dessin vectoriel en tableau, 4 orientations, zoom, pages pivotées) + onglet <b>ReeMaker</b> : formulaire, aperçu en direct, foliotage page par page, enregistrement.</td></tr>
+        <tr><td><b>1.1.20</b></td><td><b>Tampons personnalisés</b> 1 et 2 + réglages ReeMaker (listes, style, modèle des lignes).</td></tr>
       </table>
       <h3 style="margin-top:10px">Comment c'est construit</h3>
       <ul>
@@ -483,16 +646,17 @@ th { background:var(--soft); font-size:10.5px; }
     </div>
     <div style="flex:.95">
       <h3>Questions pour vous (réponses courtes suffisent)</h3>
-      <div class="q"><b>1.</b> Nom de l'onglet : « <b>ReeMaker</b> » (comme votre logiciel) ou un autre nom ?</div>
-      <div class="q"><b>2.</b> Sigles : « Site de … <b>1</b> » = numéro de <b>tranche</b> ? Si <b>plusieurs tranches</b> sont cochées : afficher « 1-2 », « 1, 2 », ou un cartouche par tranche ?</div>
-      <div class="q"><b>3.</b> Le <b>cycle</b> doit-il apparaître dans le cartouche ? Pour quels types d'arrêt est-il actif ?</div>
-      <div class="q"><b>4.</b> <b>Tampons personnalisés 1 et 2</b> : à quoi servent-ils chez vous ?</div>
-      <div class="q"><b>5.</b> Validation : <b>clic droit</b> et <b>Entrée</b> vous conviennent-ils pour « valider et page suivante » ?</div>
-      <div class="q"><b>6.</b> Le folio est-il <b>par page</b> (46, 47, 48…) même si certaines pages sont ignorées (« Passer ») ?</div>
+      <div class="q"><b>1.</b> <b>Menus</b> : la structure proposée (menu Fichier + onglets Annexe · ReeMaker · Paramètres + bande fichier) vous convient-elle ? L'outil actuel doit-il s'appeler « Annexe » ?</div>
+      <div class="q"><b>2.</b> Nom de l'onglet : « <b>ReeMaker</b> » (comme votre logiciel) ou un autre nom ?</div>
+      <div class="q"><b>3.</b> Sigles : « Site de … <b>1</b> » = numéro de <b>tranche</b> ? Si <b>plusieurs tranches</b> sont cochées : afficher « 1-2 », « 1, 2 », ou un cartouche par tranche ?</div>
+      <div class="q"><b>4.</b> Le <b>cycle</b> doit-il apparaître dans le cartouche ? Pour quels types d'arrêt est-il actif ?</div>
+      <div class="q"><b>5.</b> <b>Tampons personnalisés 1 et 2</b> : à quoi servent-ils chez vous ?</div>
+      <div class="q"><b>6.</b> Validation : <b>clic droit</b> et <b>Entrée</b> vous conviennent-ils pour « valider et page suivante » ?</div>
+      <div class="q"><b>7.</b> Le folio est-il <b>par page</b> (46, 47, 48…) même si certaines pages sont ignorées (« Passer ») ?</div>
       <div class="note"><b>Une dernière précision :</b> ces maquettes reprennent les <b>fonctions</b> de ReeMaker++ avec l'habillage d'Annexio ; elles ne copient ni son apparence ni ses textes.</div>
     </div>
   </div>
-  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>8 / 8</span></div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>11 / 11</span></div>
 </section>
 
 </body>
