@@ -20,8 +20,26 @@ pub struct Settings {
     pub thumbs: bool,
     /// Vérifier les mises à jour au démarrage.
     pub auto_update: bool,
+    // ReeMaker
+    pub rm_site: String,
+    pub rm_ree: String,
+    pub rm_indice: String,
+    pub rm_start: String,
+    pub rm_arret: String,
+    pub rm_cycle: String,
+    pub rm_show_cycle: bool,
+    /// « 0,1 »
+    pub rm_tranches: String,
+    pub rm_zoom: f32,
+    /// « auto » ou 0/90/180/270
+    pub rm_orient: String,
+    pub base_size: f32,
+    pub keep_pos: bool,
+    pub name_tpl: String,
     pub recents: Vec<String>,
 }
+
+pub const DEFAULT_NAME_TPL: &str = "[REE {ree}][ Tr {tranche}][ Ind {indice}]";
 
 impl Default for Settings {
     fn default() -> Self {
@@ -32,14 +50,27 @@ impl Default for Settings {
             total: String::new(),
             size: "14".into(),
             white_fill: true,
-            fx: 0.55,
-            fy: 0.03,
+            fx: 0.04, // bas gauche : ne recouvre pas le cartouche, posé en haut à droite par défaut
+            fy: 0.93,
             margin: 20.0,
             side_w: 290.0,
             theme: 0,
             ui_scale: 1.0,
             thumbs: true,
             auto_update: true,
+            rm_site: String::new(),
+            rm_ree: String::new(),
+            rm_indice: String::new(),
+            rm_start: "1".into(),
+            rm_arret: String::new(),
+            rm_cycle: String::new(),
+            rm_show_cycle: false,
+            rm_tranches: "0".into(),
+            rm_zoom: 1.2,
+            rm_orient: "auto".into(),
+            base_size: 9.0,
+            keep_pos: true,
+            name_tpl: DEFAULT_NAME_TPL.into(),
             recents: Vec::new(),
         }
     }
@@ -68,6 +99,19 @@ impl Settings {
         kv("ui_scale", self.ui_scale.to_string());
         kv("thumbs", self.thumbs.to_string());
         kv("auto_update", self.auto_update.to_string());
+        kv("rm_site", self.rm_site.clone());
+        kv("rm_ree", self.rm_ree.clone());
+        kv("rm_indice", self.rm_indice.clone());
+        kv("rm_start", self.rm_start.clone());
+        kv("rm_arret", self.rm_arret.clone());
+        kv("rm_cycle", self.rm_cycle.clone());
+        kv("rm_show_cycle", self.rm_show_cycle.to_string());
+        kv("rm_tranches", self.rm_tranches.clone());
+        kv("rm_zoom", self.rm_zoom.to_string());
+        kv("rm_orient", self.rm_orient.clone());
+        kv("base_size", self.base_size.to_string());
+        kv("keep_pos", self.keep_pos.to_string());
+        kv("name_tpl", self.name_tpl.clone());
         for r in &self.recents {
             kv("recent", r.clone());
         }
@@ -94,6 +138,19 @@ impl Settings {
                 "ui_scale" => s.ui_scale = v.parse::<f32>().unwrap_or(1.0).clamp(0.8, 2.0),
                 "thumbs" => s.thumbs = v == "true",
                 "auto_update" => s.auto_update = v != "false",
+                "rm_site" => s.rm_site = v.into(),
+                "rm_ree" => s.rm_ree = v.into(),
+                "rm_indice" => s.rm_indice = v.into(),
+                "rm_start" => s.rm_start = v.into(),
+                "rm_arret" => s.rm_arret = v.into(),
+                "rm_cycle" => s.rm_cycle = v.into(),
+                "rm_show_cycle" => s.rm_show_cycle = v == "true",
+                "rm_tranches" => s.rm_tranches = v.into(),
+                "rm_zoom" => s.rm_zoom = v.parse::<f32>().unwrap_or(1.2).clamp(0.5, 3.0),
+                "rm_orient" => s.rm_orient = v.into(),
+                "base_size" => s.base_size = v.parse::<f32>().unwrap_or(9.0).clamp(5.0, 30.0),
+                "keep_pos" => s.keep_pos = v != "false",
+                "name_tpl" if !v.trim().is_empty() => s.name_tpl = v.into(),
                 "recent" if !v.is_empty() => recents.push(v.to_string()),
                 _ => {}
             }
@@ -148,6 +205,9 @@ mod tests {
         s.template = "Annexe {annexe} = page {n}".into(); // « = » dans la valeur
         s.theme = 2;
         s.auto_update = false;
+        s.rm_ree = "JPJ 701".into();
+        s.rm_tranches = "1,2".into();
+        s.name_tpl = "[REE {ree}] = x".into(); // « = » dans la valeur
         s.ui_scale = 1.25;
         s.recents = vec!["C:\\a b\\c.pdf".into(), "/tmp/d.pdf".into()];
         assert_eq!(Settings::from_text(&s.to_text()), s);
