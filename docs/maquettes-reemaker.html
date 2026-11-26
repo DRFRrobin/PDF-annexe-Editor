@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Annexio — onglet ReeMaker : analyse et maquettes</title>
+<style>
+@page { size: 297mm 210mm; margin: 0; }
+:root { --red:#d90000; --ink:#1d2433; --mut:#5d6679; --line:#d9dde6; --soft:#f4f6fa; --acc:#0a5578; }
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; }
+body { font-family: Inter, "DejaVu Sans", sans-serif; color: var(--ink); font-size: 11.5px; line-height: 1.45; }
+.page { width:297mm; height:210mm; padding:13mm 15mm 11mm; position:relative; overflow:hidden; page-break-after:always; background:#fff; }
+.page:last-child { page-break-after:auto; }
+h1 { font-size:27px; margin:0 0 4px; letter-spacing:-.4px; }
+h2 { font-size:19px; margin:0 0 3px; letter-spacing:-.2px; }
+h3 { font-size:12.5px; margin:0 0 4px; }
+.sub { color:var(--mut); margin:0 0 9px; }
+.tag { display:inline-block; background:var(--red); color:#fff; font-size:9px; font-weight:700; padding:1px 7px; border-radius:9px; letter-spacing:.4px; vertical-align:2px; margin-right:6px; }
+.foot { position:absolute; left:15mm; right:15mm; bottom:5.5mm; display:flex; justify-content:space-between; color:#8b93a5; font-size:8.5px; border-top:1px solid var(--line); padding-top:3px; }
+.cols { display:flex; gap:12px; }
+.card { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:9px 11px; }
+.card p, .card ul { margin:3px 0; }
+ul { padding-left:16px; margin:3px 0; }
+li { margin:1.5px 0; }
+.note { border-left:3px solid var(--red); background:#fff5f5; padding:5px 9px; border-radius:0 6px 6px 0; margin:6px 0; }
+.q { border-left:3px solid #e0a100; background:#fff9e8; padding:5px 9px; border-radius:0 6px 6px 0; margin:5px 0; }
+table { border-collapse:collapse; width:100%; }
+th, td { border:1px solid var(--line); padding:3px 7px; text-align:left; vertical-align:top; }
+th { background:var(--soft); font-size:10.5px; }
+.pill { display:inline-block; border:1px solid var(--line); background:#fff; border-radius:9px; padding:0 6px; font-size:9.5px; color:var(--mut); }
+.flow { display:flex; align-items:stretch; gap:6px; margin:8px 0; }
+.step { flex:1; background:#fff; border:1.5px solid var(--acc); border-radius:8px; padding:6px 8px; font-size:10.5px; position:relative; }
+.step b { display:block; color:var(--acc); font-size:10px; margin-bottom:1px; }
+.arrow { align-self:center; color:var(--acc); font-weight:700; }
+
+/* ── cartouche ── */
+.cart { display:inline-block; border:var(--b,1.5px) solid var(--red); color:var(--red); background:#fff; font-family: FreeSans, Arial, Helvetica, sans-serif; font-size:var(--fs,11px); line-height:1.3; text-align:left; white-space:nowrap; }
+.cart .row { display:flex; border-top:var(--b,1.5px) solid var(--red); }
+.cart .row:first-child { border-top:0; }
+.cart .c { padding:1px 6px; }
+.cart .c + .c { border-left:var(--b,1.5px) solid var(--red); }
+.cart .g { flex:1; }
+.cart .r { text-align:right; }
+.cart.empty { border:1.5px dashed #b8bfce; color:#9aa2b4; background:#fafbfd; }
+.cart.empty .c { padding:5px 10px; }
+
+/* ── fenêtre Annexio (thème sombre) ── */
+.win { width:100%; background:#1b1b1b; color:#d8d8d8; border:1px solid #444; border-radius:7px; overflow:hidden; font-size:9px; line-height:1.35; display:flex; flex-direction:column; box-shadow:0 3px 14px #0003; }
+.titlebar { background:#2b2b2b; padding:3px 9px; display:flex; align-items:center; gap:6px; border-bottom:1px solid #111; }
+.titlebar .dot { width:7px; height:7px; border-radius:50%; background:#555; }
+.titlebar .t { margin-left:4px; color:#bbb; font-size:8.5px; }
+.tabs { display:flex; align-items:center; gap:7px; padding:5px 9px; border-bottom:1px solid #303030; background:#1f1f1f; }
+.tabs .h { font-size:12px; color:#8a8a8a; margin-right:10px; }
+.tab { padding:2px 8px; border-radius:6px; color:#ddd; }
+.tab.on { background:var(--acc); color:#fff; }
+.tab.new { box-shadow:0 0 0 1.5px var(--red); }
+.tabs .v { margin-left:auto; color:#777; font-size:7.5px; }
+.body { display:flex; flex:1; min-height:0; }
+.left { width:var(--lw,185px); border-right:1px solid #333; padding:7px 8px; overflow:hidden; background:#1c1c1c; }
+.thumbs { width:76px; border-right:1px solid #333; padding:6px 8px; background:#1c1c1c; }
+.th { width:54px; height:70px; background:#fff; border:1px solid #777; border-radius:2px; margin-bottom:16px; position:relative; }
+.th.cur { border:2px solid var(--red); }
+.th i { position:absolute; right:2px; top:2px; width:6px; height:6px; border-radius:50%; background:var(--red); }
+.th span { position:absolute; bottom:-12px; left:0; right:0; text-align:center; font-size:6.5px; color:#999; }
+.prev { flex:1; background:#181818; position:relative; padding:6px 8px; }
+.zoom { display:flex; gap:4px; align-items:center; margin-bottom:5px; }
+.bar { display:flex; align-items:center; gap:6px; padding:4px 9px; border-top:1px solid #333; background:#1f1f1f; }
+.bar .ok { color:#2fb36a; }
+.bar .sp { margin-left:auto; display:flex; gap:7px; align-items:center; }
+.mouse { display:inline-block; width:13px; height:20px; border:1.5px solid #bbb; border-radius:7px 7px 8px 8px; position:relative; flex:none; }
+.mouse::before { content:''; position:absolute; top:0; width:50%; height:8px; background:#2fb36a; }
+.mouse.l::before { left:0; border-radius:6px 0 0 0; }
+.mouse.r::before { right:0; border-radius:0 6px 0 0; }
+.btn { white-space:nowrap; display:inline-block; background:#343434; border-radius:4px; padding:1.5px 7px; color:#ddd; }
+.btn.red { background:var(--red); color:#fff; font-weight:700; }
+.btn.blue { background:var(--acc); color:#fff; }
+.btn.big { padding:4px 8px; text-align:center; display:block; }
+.lab { color:#9a9a9a; font-size:8.5px; margin:5px 0 1.5px; }
+.sec { color:#fff; font-weight:700; margin:7px 0 3px; font-size:9.5px; }
+.inp { background:#0c0c0c; border-radius:3px; padding:1.5px 5px; min-height:14px; color:#eee; display:block; }
+.inp.dis { color:#666; background:#141414; }
+.row2 { display:flex; gap:5px; align-items:center; }
+.cb { display:inline-block; width:8px; height:8px; border:1px solid #888; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+.cb.on { background:var(--acc); border-color:#5ab; }
+.rb { display:inline-block; width:8px; height:8px; border:1px solid #888; border-radius:50%; margin-right:4px; vertical-align:-1px; }
+.rb.on { background:radial-gradient(#fff 0 28%, var(--acc) 32%); border-color:#5ab; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5px 4px; }
+.sheet { background:#fff; position:relative; box-shadow:0 0 0 2px #0006; margin:0 auto; }
+.sheet .ln { position:absolute; left:8%; right:8%; height:2.5px; background:#d7dbe3; border-radius:1px; }
+.sheet .bl { position:absolute; background:#e5e8ef; border-radius:2px; }
+.banner { background:#2a1f10; border:1px solid #6a4a10; color:#ffcf70; padding:3px 8px; border-radius:4px; margin-bottom:5px; display:flex; gap:8px; align-items:center; }
+.hint { color:#999; font-size:7.5px; }
+.callout { position:absolute; background:var(--red); color:#fff; font-weight:700; font-size:9px; width:16px; height:16px; border-radius:50%; text-align:center; line-height:16px; box-shadow:0 0 0 2px #fff; }
+.legend { counter-reset:n; margin:0; padding:0; list-style:none; }
+.legend li { counter-increment:n; padding-left:21px; position:relative; margin:4px 0; }
+.legend li::before { content:counter(n); position:absolute; left:0; top:1px; width:15px; height:15px; border-radius:50%; background:var(--acc); color:#fff; font-weight:700; font-size:9px; text-align:center; line-height:15px; }
+.orient { display:flex; gap:7px; }
+.tile { width:92px; height:118px; background:#262626; border:1px solid #444; border-radius:5px; position:relative; }
+.tile.on { border:2px solid var(--acc); background:#1d2c36; }
+.tile .cart { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(var(--rot,0deg)); --fs:6.2px; --b:1px; }
+.tile em { position:absolute; bottom:1px; left:0; right:0; text-align:center; font-style:normal; font-size:7.5px; color:#aaa; }
+.bd { font-style:normal; display:inline-block; background:var(--acc); color:#fff; border-radius:50%; font-size:.55em; width:1.55em; height:1.55em; line-height:1.55em; text-align:center; vertical-align:middle; margin-left:.45em; font-family:Inter,sans-serif; font-weight:700; }
+.vl { position:absolute; top:8%; bottom:8%; width:2.5px; background:#d7dbe3; border-radius:1px; }
+.bad { position:absolute; left:0; right:0; bottom:-17px; text-align:center; font-size:9px; font-weight:700; }
+.win.big { font-size:10.5px; }
+.kbd { display:inline-block; border:1px solid #c3c9d6; border-bottom-width:2px; background:#fff; border-radius:4px; padding:0 5px; font-size:9.5px; font-family:inherit; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ 1. COUVERTURE ══════════ -->
+<section class="page" style="background:linear-gradient(135deg,#fff 0 58%,#fff1f1 58%)">
+  <div style="margin-top:34mm">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px">
+      <div style="width:58px;height:58px;border-radius:14px;background:linear-gradient(135deg,#d93a34,#2f070b);position:relative">
+        <div style="position:absolute;left:16px;top:10px;width:26px;height:36px;border:3.5px solid #fff;border-radius:5px"></div>
+        <div style="position:absolute;left:21px;top:27px;width:16px;height:10px;background:#ff9f9a;border-radius:2px"></div>
+      </div>
+      <div style="font-size:15px;color:var(--mut);letter-spacing:.5px;font-weight:600">ANNEXIO</div>
+    </div>
+    <h1 style="font-size:38px">Nouvel onglet « ReeMaker »</h1>
+    <p style="font-size:17px;color:var(--mut);margin:6px 0 22px">Analyse du logiciel de référence et maquettes de ce qui sera créé<br>dans l'application Rust, <b>avant</b> tout développement.</p>
+    <div class="cols" style="max-width:215mm">
+      <div class="card" style="flex:1"><h3>1 · Analyse</h3><p>Ce que fait ReeMaker++ d'après vos 3 captures, écran par écran.</p></div>
+      <div class="card" style="flex:1"><h3>2 · Le cartouche</h3><p>Anatomie, variables, 4 orientations, tampons personnalisés.</p></div>
+      <div class="card" style="flex:1"><h3>3 · Maquettes</h3><p>Onglet, foliotage page par page, page de garde, paramètres.</p></div>
+      <div class="card" style="flex:1"><h3>4 · Plan</h3><p>Étapes de livraison, tests, questions à valider.</p></div>
+    </div>
+  </div>
+  <div style="position:absolute; left:15mm; bottom:20mm; color:var(--mut); font-size:11px">
+    Document de conception — Annexio, version actuelle 1.1.17 · version prévue pour le premier lot : 1.1.18<br>
+    Toutes les valeurs des maquettes sont <b>fictives</b> (site, REE, etc.). Les photos d'origine ne sont pas reprises.
+  </div>
+  <div style="position:absolute; right:22mm; top:44mm" >
+    <div class="cart" style="--fs:19px;--b:3px;transform:rotate(-4deg);box-shadow:0 8px 24px #d9000030">
+      <div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div>
+      <div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div>
+      <div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 2. ANALYSE ══════════ -->
+<section class="page">
+  <h2><span class="tag">ANALYSE</span>ReeMaker++ : ce que le logiciel fait</h2>
+  <p class="sub">Déduit des 3 captures. Les points marqués « hypothèse » sont à confirmer avec vous (voir dernière page).</p>
+
+  <div class="flow">
+    <div class="step"><b>1 · Ouvrir</b>Choisir la « procédure PDF à folioter » (bouton <i>Ouvrir</i>).</div><div class="arrow">▶</div>
+    <div class="step"><b>2 · Renseigner</b>Site, R.E.E., indice, folio de départ, type d'arrêt, cycle, pages, tranches, page de garde.</div><div class="arrow">▶</div>
+    <div class="step"><b>3 · Démarrer</b>Bouton « Démarrer le foliotage ».</div><div class="arrow">▶</div>
+    <div class="step"><b>4 · Placer</b>Page par page : on place le <b>cartouche</b> sur la page affichée.</div><div class="arrow">▶</div>
+    <div class="step"><b>5 · Valider</b>« Valider et passer à la page suivante » ; le folio s'incrémente.</div><div class="arrow">▶</div>
+    <div class="step"><b>6 · Résultat</b>PDF folioté (nom du type « … folioté0.pdf »).</div>
+  </div>
+
+  <div class="cols">
+    <div style="flex:1.25">
+      <table>
+        <tr><th style="width:26%">Élément observé</th><th>Détail</th><th style="width:27%">Dans Annexio</th></tr>
+        <tr><td><b>Menu</b></td><td>Démarrer un foliotage · Générer page de garde · Paramètres · À propos · Quitter</td><td>Onglet <b>ReeMaker</b> (+ onglet Paramètres existant)</td></tr>
+        <tr><td><b>Fichier</b></td><td>Champ « Procédure PDF à folioter » + bouton Ouvrir ; message d'état « Sélectionner un fichier PDF pour continuer… »</td><td>Réutilise l'ouverture existante (Ctrl+O, glisser-déposer)</td></tr>
+        <tr><td><b>Identité du dossier</b></td><td>Site · R.E.E. · Indice (champs texte)</td><td>Champs + mémorisation</td></tr>
+        <tr><td><b>Numérotation</b></td><td>« Démarrer le foliotage de la PEE à partir de » (ex. 46)</td><td>Compteur de départ</td></tr>
+        <tr><td><b>Arrêt</b></td><td>Type d'arrêt (liste, ex. TEM) · Cycle (numérique, grisé pour certains types : hypothèse)</td><td>Liste modifiable + cycle conditionnel</td></tr>
+        <tr><td><b>Pages</b></td><td>Totalité, ou « Page(s) de … à … »</td><td>Idem (+ pages libres déjà connues)</td></tr>
+        <tr><td><b>Tranches</b></td><td>Cases Tranche 0 à 9 (ici la 0 est cochée)</td><td>10 cases à cocher</td></tr>
+        <tr><td><b>Page de garde</b></td><td>Case « Générer la page de garde ? » + entrée de menu dédiée</td><td>Case + bouton dédié</td></tr>
+        <tr><td><b>Placement</b></td><td>Souris : un clic place le tampon, un autre valide et passe à la page suivante ; l'aperçu gère des pages <b>pivotées</b></td><td>Clic = placer ; Entrée / clic droit = valider</td></tr>
+        <tr><td><b>Réglages du tampon</b></td><td>Zoom du tampon (1,2) · 4 orientations · « Tampon personnalisé 1 » et « 2 » (emplacements vides)</td><td>Zoom, 4 orientations, 2 emplacements perso</td></tr>
+        <tr><td><b>Suivi</b></td><td>Barre d'état : « Nombre de pages traitées : 2 · Début du foliotage, page 1 / 2 »</td><td>Bandeau de progression + liste récapitulative</td></tr>
+      </table>
+    </div>
+    <div style="flex:.75">
+      <div class="card">
+        <h3>Le cartouche (3 lignes, bordure rouge)</h3>
+        <div style="margin:7px 0 5px">
+          <div class="cart" style="--fs:13px"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div>
+        </div>
+        <ul>
+          <li>Ligne 1 : <b>Site</b> + n° de <b>tranche</b></li>
+          <li>Ligne 2 : <b>REE</b> | <b>Indice</b></li>
+          <li>Ligne 3 : <b>Folio</b> | <b>type d'arrêt</b></li>
+        </ul>
+      </div>
+      <div class="note"><b>Point clé :</b> contrairement au tampon « Annexe X Folio n/N » d'Annexio (une ligne), le cartouche est un <b>tableau à cellules</b>, avec orientation et zoom, et <b>un folio par page</b> choisi dans un ordre continu sur plusieurs documents (départ à 46).</div>
+      <div class="q"><b>À ne pas deviner :</b> le sens exact des sigles (REE, PEE, TEM, tranche, cycle). Ils seront traités comme des <b>champs libres</b> ; seul leur affichage dans le cartouche compte.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>2 / 9</span></div>
+</section>
+
+<!-- ══════════ 3. CARTOUCHE ══════════ -->
+<section class="page">
+  <h2><span class="tag">CARTOUCHE</span>Anatomie, variables et orientations</h2>
+  <p class="sub">Le cartouche sera dessiné dans le PDF (traits et texte vectoriels, Helvetica), jamais en image : net à l'impression et à tout zoom.</p>
+  <div class="cols">
+    <div style="flex:1.05">
+      <div class="card" style="padding:16px 18px">
+        <div class="cart" style="--fs:23px;--b:3px">
+          <div class="row"><div class="c g">Site de SITE EXEMPLE 1 <i class="bd">1</i></div></div>
+          <div class="row"><div class="c g">REE 001 <i class="bd">2</i></div><div class="c">Ind. A <i class="bd">3</i></div></div>
+          <div class="row"><div class="c g">Folio 46 <i class="bd">4</i></div><div class="c">TEM <i class="bd">5</i></div></div>
+        </div>
+        <ol class="legend" style="margin-top:14px;font-size:12.5px">
+          <li><b>Site + tranche</b> : <code>Site de {site} {tranche}</code></li>
+          <li><b>REE</b> : <code>REE {ree}</code></li>
+          <li><b>Indice</b> : <code>Ind. {indice}</code></li>
+          <li><b>Folio</b> : <code>Folio {folio}</code> — +1 à chaque page</li>
+          <li><b>Type d'arrêt</b> : <code>{arret}</code> (le cycle peut s'y ajouter : <code>{arret} {cycle}</code>)</li>
+        </ol>
+      </div>
+      <div class="note">Le texte de chaque cellule est un <b>modèle</b> modifiable dans les paramètres : on peut changer les mots (« Site de », « Ind. »…), réordonner ou ajouter une variable.</div>
+    </div>
+    <div style="flex:.95">
+      <h3>Orientation (4 choix + automatique)</h3>
+      <div class="win" style="background:#202020; padding:10px">
+        <div class="orient">
+          <div class="tile on" style="--rot:0deg"><div class="cart" style="--fs:6.2px;--b:1px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><em>0° · normal</em></div>
+          <div class="tile" style="--rot:90deg"><div class="cart" style="--fs:6.2px;--b:1px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><em>90°</em></div>
+          <div class="tile" style="--rot:180deg"><div class="cart" style="--fs:6.2px;--b:1px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><em>180°</em></div>
+          <div class="tile" style="--rot:270deg"><div class="cart" style="--fs:6.2px;--b:1px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><em>270°</em></div>
+        </div>
+        <div style="margin-top:8px;font-size:10px" class="row2"><span class="rb on"></span>Automatique <span class="hint" style="font-size:9px">(suit la rotation de la page, comme dans votre exemple pivoté)</span></div>
+      </div>
+      <h3 style="margin-top:12px">Zoom du tampon</h3>
+      <div class="cols" style="align-items:flex-end;gap:16px">
+        <div style="text-align:center"><div class="cart" style="--fs:8px;--b:1px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><div style="color:#5d6679;font-size:10px;margin-top:2px">0,8</div></div>
+        <div style="text-align:center"><div class="cart" style="--fs:10px;--b:1.2px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><div style="color:#5d6679;font-size:10px;margin-top:2px">1,0</div></div>
+        <div style="text-align:center"><div class="cart" style="--fs:12.5px;--b:1.5px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div><div style="color:#5d6679;font-size:10px;margin-top:2px">1,2</div></div>
+      </div>
+      <p class="sub" style="margin-top:6px">Le zoom agit sur la taille du texte (taille de base réglable) ; la largeur suit le texte. Plage prévue : 0,5 à 3.</p>
+    </div>
+  </div>
+  <div class="cols" style="margin-top:6px">
+    <div class="card" style="flex:1"><h3>Mesure</h3><p>Largeur du texte calculée avec les <b>vraies largeurs Helvetica</b> (déjà utilisées par Annexio) : le cartouche ne déborde jamais de ses cellules.</p></div>
+    <div class="card" style="flex:1"><h3>Colonnes</h3><p>Colonne de droite = la plus large des cellules de droite ; la ligne 1 occupe toute la largeur ; trait intérieur identique à la bordure.</p></div>
+    <div class="card" style="flex:1"><h3>Position</h3><p>Coin haut-gauche mémorisé <b>en proportion de la page</b> ; le cartouche reste dans la page (pas de débordement).</p></div>
+    <div class="card" style="flex:1"><h3>Fond</h3><p>Fond blanc optionnel (déjà présent dans Annexio) pour masquer ce qu'il recouvre.</p></div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>3 / 9</span></div>
+</section>
+
+<!-- ══════════ 4. MAQUETTE : ONGLET ══════════ -->
+<section class="page">
+  <h2><span class="tag">MAQUETTE 1</span>Le nouvel onglet « ReeMaker » (avant de démarrer)</h2>
+  <p class="sub">Il s'ajoute à la barre d'onglets, à côté de Fichier et Paramètres. L'aperçu montre déjà le cartouche tel qu'il sera posé.</p>
+  <div class="win big" style="height:131mm">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+    <div class="tabs"><span class="h">Annexio</span><span class="tab">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab on new">🗂 ReeMaker</span><span class="v">v1.1.18</span></div>
+    <div class="body">
+      <div class="left" style="--lw:318px">
+        <div class="row2"><div class="btn" style="flex:none">📂 Ouvrir un PDF…</div><div class="inp" style="flex:1">FNC 228 exemple.pdf — 12 p.</div></div>
+        <div class="sec">Dossier</div>
+        <div class="row2"><div style="flex:2"><div class="lab" style="margin-top:0">Site</div><div class="inp">SITE EXEMPLE</div></div><div style="flex:1.4"><div class="lab" style="margin-top:0">R.E.E.</div><div class="inp">REE 001</div></div><div style="flex:.6"><div class="lab" style="margin-top:0">Indice</div><div class="inp">A</div></div></div>
+        <div class="row2" style="margin-top:2px"><div style="flex:1.3"><div class="lab">Folio de départ</div><div class="inp">46 ⇅</div></div><div style="flex:1.3"><div class="lab">Type d'arrêt</div><div class="inp">TEM ⌄</div></div><div style="flex:1"><div class="lab">Cycle</div><div class="inp dis">36 ⇅</div></div></div>
+        <div class="sec">Pages à folioter</div>
+        <div class="row2"><span><span class="rb on"></span>Totalité</span><span style="margin-left:8px"><span class="rb"></span>Pages de</span><span class="inp dis" style="width:28px">1</span>à<span class="inp dis" style="width:28px">12</span></div>
+        <div class="sec">Tranche(s) concernée(s)</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px 4px"><span><i class="cb on"></i>0</span><span><i class="cb"></i>1</span><span><i class="cb"></i>2</span><span><i class="cb"></i>3</span><span><i class="cb"></i>4</span><span><i class="cb"></i>5</span><span><i class="cb"></i>6</span><span><i class="cb"></i>7</span><span><i class="cb"></i>8</span><span><i class="cb"></i>9</span></div>
+        <div class="sec">Tampon</div>
+        <div class="row2"><span class="rb on"></span>Standard <span class="rb" style="margin-left:6px"></span>Perso 1 <span class="rb" style="margin-left:6px"></span>Perso 2</div>
+        <div class="row2" style="margin-top:3px">Zoom <span class="inp" style="width:44px">1,2 ⇅</span> Orientation <span class="btn blue">Auto</span><span class="btn">0°</span><span class="btn">90°</span></div>
+        <div style="margin-top:6px"><i class="cb"></i>Générer la page de garde ?</div>
+        <div class="btn red big" style="margin-top:8px;font-size:11px">▶ Démarrer le foliotage</div>
+      </div>
+      <div class="thumbs"><div class="th cur"><i></i><span>1</span></div><div class="th"><i></i><span>2</span></div><div class="th"><i></i><span>3</span></div><div class="th"><i></i><span>4</span></div></div>
+      <div class="prev">
+        <div class="zoom"><span class="btn">−</span><span style="color:#999">95 %</span><span class="btn">+</span><span class="btn blue">Page entière</span><span class="btn">Largeur</span></div>
+        <div class="sheet" style="width:262px;height:371px">
+          <div class="bl" style="left:14px;top:14px;width:64px;height:40px;background:#cfd6e2"></div>
+          <div class="ln" style="top:72px"></div><div class="ln" style="top:82px;right:30%"></div><div class="ln" style="top:92px"></div>
+          <div class="bl" style="left:14px;right:14px;top:122px;height:96px"></div>
+          <div class="ln" style="top:238px"></div><div class="ln" style="top:248px"></div><div class="ln" style="top:258px;right:40%"></div>
+          <div class="ln" style="top:288px"></div><div class="ln" style="top:298px;right:25%"></div>
+          <div class="cart" style="--fs:8.4px;--b:1.2px;position:absolute;right:12px;top:12px"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bar"><span class="ok">Prêt : 12 page(s), folios 46 à 57.</span><span class="sp"><span>Page 1/12</span><span class="btn red">Générer le PDF…</span></span></div>
+  </div>
+  <div class="cols" style="margin-top:7px">
+    <div class="card" style="flex:1"><h3>Même logique que ReeMaker++</h3><p>Mêmes champs dans le même ordre : site, REE, indice, folio de départ, type d'arrêt, cycle, pages, tranches, page de garde.</p></div>
+    <div class="card" style="flex:1"><h3>Plus pratique</h3><p>« Folios 46 à 57 » affiché d'avance ; cartouche mis à jour en direct dans l'aperçu ; réglages mémorisés d'une session à l'autre.</p></div>
+    <div class="card" style="flex:1"><h3>Champs conditionnels</h3><p>Cycle grisé tant que le type d'arrêt ne l'exige pas (hypothèse) ; « Pages de … à … » grisé tant que « Totalité » est choisi.</p></div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>4 / 9</span></div>
+</section>
+
+<!-- ══════════ 5. MAQUETTE : FOLIOTAGE PAGE PAR PAGE ══════════ -->
+<section class="page">
+  <h2><span class="tag">MAQUETTE 2</span>Foliotage page par page</h2>
+  <p class="sub">Même principe que ReeMaker++ (placer, valider, page suivante), avec en plus de quoi aller vite et corriger.</p>
+  <div class="win big" style="height:131mm">
+    <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+    <div class="tabs"><span class="h">Annexio</span><span class="tab">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab on">🗂 ReeMaker</span><span class="v">v1.1.18</span></div>
+    <div class="banner" style="font-size:11px"><b>Foliotage en cours</b><span>Page <b>3 / 12</b> · Folio <b>48</b></span><span style="margin-left:auto" class="btn">Annuler le foliotage</span></div>
+    <div class="body">
+      <div class="left" style="--lw:250px">
+        <div class="sec" style="margin-top:0">Souris et clavier</div>
+        <div class="row2"><span class="mouse l"></span><span><b>Clic gauche</b> : placer le tampon <span class="hint">(ou glisser le rectangle)</span></span></div>
+        <div class="row2" style="margin-top:4px"><span class="mouse r"></span><span><b>Clic droit</b> ou <b>Entrée</b> : valider et passer à la page suivante</span></div>
+        <div class="btn red big" style="margin-top:8px;font-size:11px">✔ Valider et page suivante</div>
+        <div class="row2" style="margin-top:4px"><span class="btn" style="flex:1;text-align:center">‹ Précédente</span><span class="btn" style="flex:1;text-align:center">Passer ›</span></div>
+        <div style="margin-top:7px"><i class="cb on"></i>Garder la position pour la suite</div>
+        <div class="sec">Tampon</div>
+        <div class="row2"><span class="rb on"></span>Standard <span class="rb" style="margin-left:6px"></span>Perso 1 <span class="rb" style="margin-left:6px"></span>Perso 2</div>
+        <div class="row2" style="margin-top:4px">Zoom <span class="inp" style="width:46px">1,2 ⇅</span></div>
+        <div style="margin-top:4px">Orientation</div><div class="row2" style="margin-top:2px"><span class="btn blue">Auto</span><span class="btn">0°</span><span class="btn">90°</span><span class="btn">180°</span><span class="btn">270°</span></div>
+        <div class="sec">Avancement</div>
+        <div class="hint" style="font-size:9.5px;line-height:1.6">✔ page 1 → folio 46<br>✔ page 2 → folio 47<br><b style="color:#fff">● page 3 → folio 48 (en cours)</b></div>
+      </div>
+      <div class="prev" style="display:flex; align-items:center; justify-content:center">
+        <div class="sheet" style="width:448px;height:317px">
+          <div class="bl" style="left:20px;top:20px;width:104px;height:54px;background:#cfd6e2"></div>
+          <div class="ln" style="top:96px"></div><div class="ln" style="top:108px;right:35%"></div><div class="ln" style="top:120px"></div>
+          <div class="bl" style="left:20px;right:20px;top:150px;height:96px"></div>
+          <div class="ln" style="top:266px"></div><div class="ln" style="top:278px;right:50%"></div>
+          <div class="cart" style="--fs:10.5px;--b:1.5px;position:absolute;left:222px;top:26px;box-shadow:0 0 0 3px #0a557899"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 48</div><div class="c">TEM</div></div></div>
+          <div style="position:absolute;left:222px;top:8px;font-size:9px;color:#0a5578;font-weight:700">⇱ glisser pour déplacer</div>
+        </div>
+      </div>
+      <div class="thumbs" style="border-left:1px solid #333;border-right:0"><div class="th"><span>1 ✔</span></div><div class="th"><span>2 ✔</span></div><div class="th cur"><span>3</span></div><div class="th"><span>4</span></div></div>
+    </div>
+    <div class="bar"><span>Folio <b>48</b> posé en haut à droite — Entrée pour valider.</span><span class="sp"><span>Page 3/12</span></span></div>
+  </div>
+  <div class="cols" style="margin-top:7px">
+    <div class="card" style="flex:1"><h3>Nouveau vs ReeMaker++</h3><p><b>Retour arrière</b> sur la page précédente, <b>Passer</b> une page, <b>Annuler</b> sans rien écrire sur disque.</p></div>
+    <div class="card" style="flex:1"><h3>Aller vite</h3><p><b>Garder la position</b> (cochée par défaut) : les pages semblables se valident d'un seul Entrée. Miniatures avec ✔ sur les pages faites.</p></div>
+    <div class="card" style="flex:1"><h3>À la dernière page</h3><p>Bandeau « Terminé — Enregistrer… » → dialogue « Enregistrer sous » (<i>…_folioté.pdf</i>), puis <b>Ouvrir le PDF / le dossier</b>. <span class="pill">hypothèse : clic gauche = placer, clic droit = valider</span></p></div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>5 / 9</span></div>
+</section>
+
+<!-- ══════════ 6. MAQUETTE : PAGES PIVOTÉES + TAMPONS PERSO ══════════ -->
+<section class="page">
+  <h2><span class="tag">MAQUETTE 3</span>Pages pivotées et tampons personnalisés</h2>
+  <p class="sub">Deux cas que ReeMaker++ gère (votre 3ᵉ capture montre une page dont le texte est couché) et qu'Annexio doit gérer.</p>
+  <div class="cols">
+    <div style="flex:1.7">
+      <div class="card" style="padding:12px 14px">
+        <h3>Une page dont le texte est couché : le cartouche doit suivre</h3>
+        <div class="cols" style="gap:26px;margin-top:10px;padding-bottom:22px;justify-content:center;zoom:1.12">
+          <div style="text-align:center;position:relative">
+            <div class="sheet" style="width:212px;height:150px;box-shadow:0 0 0 1.5px #aab;">
+              <div class="bl" style="left:10px;top:10px;width:46px;height:26px;background:#cfd6e2"></div>
+              <div class="ln" style="top:50px"></div><div class="ln" style="top:58px;right:35%"></div>
+              <div class="bl" style="left:10px;right:10px;top:76px;height:56px"></div>
+              <div class="cart" style="--fs:6.2px;--b:0.9px;position:absolute;right:8px;top:8px"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div>
+            </div>
+            <div class="bad" style="color:#1a8a4f">✔ Page normale : 0°</div>
+          </div>
+          <div style="text-align:center;position:relative"><div class="sheet" style="width:150px;height:212px;box-shadow:0 0 0 1.5px #aab;">
+      <div class="vl" style="left:40px"></div><div class="vl" style="left:50px;bottom:30%"></div><div class="vl" style="left:60px"></div>
+      <div class="bl" style="left:78px;width:60px;top:30px;height:150px"></div>
+      <div class="bl" style="left:14px;top:14px;width:16px;height:38px;background:#cfd6e2"></div>
+      <div class="cart" style="--fs:5.6px;--b:0.8px;position:absolute;right:7px;top:7px"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div></div><div class="bad" style="color:#c00">✘ texte couché, tampon droit</div></div>
+          <div style="text-align:center;position:relative"><div class="sheet" style="width:150px;height:212px;box-shadow:0 0 0 1.5px #aab;">
+      <div class="vl" style="left:40px"></div><div class="vl" style="left:50px;bottom:30%"></div><div class="vl" style="left:60px"></div>
+      <div class="bl" style="left:78px;width:60px;top:30px;height:150px"></div>
+      <div class="bl" style="left:14px;top:14px;width:16px;height:38px;background:#cfd6e2"></div>
+      <div class="cart" style="--fs:5.6px;--b:0.8px;position:absolute;right:40px;top:7px;transform-origin:right top;transform:rotate(-90deg)"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div></div><div class="bad" style="color:#1a8a4f">✔ tampon 270° (mode Auto)</div></div>
+        </div>
+        
+      </div>
+    </div>
+    <div style="flex:1">
+      <div class="card" style="height:100%"><h3>Règles</h3><ul style="margin-top:4px;font-size:12px">
+          <li>En mode <b>Auto</b>, le cartouche suit la rotation de la page : il se lit dans le même sens que le texte.</li>
+          <li>On peut aussi forcer 0°, 90°, 180° ou 270° page par page.</li>
+          <li>Dans le PDF, le dessin tient compte de la rotation de page (déjà géré par la brique actuelle d'Annexio).</li>
+        </ul><div class="q" style="margin-top:10px">Votre capture montre une page <b>pivotée</b> : le tampon y est placé couché. Cette gestion est donc indispensable, pas optionnelle.</div></div>
+    </div>
+  </div>
+  <div class="cols" style="margin-top:8px">
+    <div style="flex:1">
+      <div class="win big" style="padding:11px">
+        <div class="sec" style="margin-top:0">Tampons personnalisés <span class="hint">(hypothèse sur leur contenu)</span></div>
+        <div class="cols" style="gap:12px">
+          <div style="flex:1"><div class="row2" style="margin-bottom:5px"><span class="rb on"></span><b>Standard</b></div><div class="cart" style="--fs:8.5px;--b:1.1px;"><div class="row"><div class="c g">Site de SITE EXEMPLE 1</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">TEM</div></div></div></div>
+          <div style="flex:1"><div class="row2" style="margin-bottom:5px"><span class="rb"></span><b>Perso 1</b> <span class="btn" style="margin-left:auto">✎ Modif.</span></div><div class="cart" style="--fs:8.5px;--b:1.1px;"><div class="row"><div class="c g">REE 001 — Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">Visa :</div></div></div></div>
+          <div style="flex:1"><div class="row2" style="margin-bottom:5px"><span class="rb"></span><b>Perso 2</b> <span class="btn" style="margin-left:auto">✎ Créer</span></div><div class="cart empty"><div class="row" style="border:0"><div class="c g">— vide —</div></div></div></div>
+        </div>
+        <div class="sec" style="margin-top:12px">Éditeur d'un tampon personnalisé</div>
+        <table style="font-size:10px; border-color:#444; color:#ddd; background:#161616">
+          <tr><th style="background:#222;border-color:#444;color:#aaa;width:12%">Ligne</th><th style="background:#222;border-color:#444;color:#aaa">Cellule gauche</th><th style="background:#222;border-color:#444;color:#aaa">Cellule droite</th></tr>
+          <tr><td style="border-color:#444">1</td><td style="border-color:#444">REE {ree} — Ind. {indice}</td><td style="border-color:#444;color:#777">(fusionnée)</td></tr>
+          <tr><td style="border-color:#444">2</td><td style="border-color:#444">Folio {folio}</td><td style="border-color:#444">Visa :</td></tr>
+          <tr><td style="border-color:#444;color:#777">3</td><td style="border-color:#444;color:#777">+ ajouter une ligne</td><td style="border-color:#444"></td></tr>
+        </table>
+        <div class="hint" style="margin-top:4px;font-size:9px">Variables : {site} {tranche} {ree} {indice} {folio} {arret} {cycle} {date}</div>
+        <div class="row2" style="margin-top:9px"><span class="lab" style="margin:0">Aperçu :</span><div class="cart" style="--fs:8.5px;--b:1.1px;"><div class="row"><div class="c g">REE 001 — Ind. A</div></div><div class="row"><div class="c g">Folio 46</div><div class="c">Visa :</div></div></div><span style="margin-left:auto" class="btn blue">Enregistrer</span><span class="btn">Annuler</span></div>
+      </div>
+      <div class="q" style="margin-top:6px">Sur votre capture, les deux emplacements sont <b>vides</b>. Je prévois un éditeur simple (lignes × 2 cellules, variables). Dites-moi si vous aviez un autre usage en tête.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>6 / 9</span></div>
+</section>
+
+<!-- ══════════ 7. MAQUETTE : PAGE DE GARDE ══════════ -->
+<section class="page">
+  <h2><span class="tag">MAQUETTE 4</span>Page de garde</h2>
+  <p class="sub">Deux usages comme dans ReeMaker++ : la case « Générer la page de garde ? » (insérée en tête du PDF folioté) et la fonction dédiée « Générer page de garde ».</p>
+  <div class="cols" style="gap:22px">
+    <div style="flex:none;width:380px">
+      <div class="sheet" style="zoom:1.15;width:330px;height:466px;background:#fff;box-shadow:0 0 0 1px #ccd, 0 6px 18px #0002;padding:30px 28px; font-family:FreeSans,Arial,sans-serif; color:#222">
+        <div style="font-size:10px;color:#888;letter-spacing:1.4px">PAGE DE GARDE</div>
+        <div style="font-size:25px;font-weight:700;margin:10px 0 3px">SITE EXEMPLE</div>
+        <div style="font-size:13.5px;color:#444">Procédure : FNC 228 exemple</div>
+        <div style="border-top:2.5px solid var(--red);margin:16px 0 12px"></div>
+        <table style="font-size:12.5px;border:0">
+          <tr><td style="border:0;color:#777;width:38%">R.E.E.</td><td style="border:0"><b>REE 001</b></td></tr>
+          <tr><td style="border:0;color:#777">Indice</td><td style="border:0"><b>A</b></td></tr>
+          <tr><td style="border:0;color:#777">Type d'arrêt</td><td style="border:0"><b>TEM</b></td></tr>
+          <tr><td style="border:0;color:#777">Cycle</td><td style="border:0"><b>36</b></td></tr>
+          <tr><td style="border:0;color:#777">Tranche(s)</td><td style="border:0"><b>0</b></td></tr>
+          <tr><td style="border:0;color:#777">Pages / folios</td><td style="border:0"><b>12 pages · folios 46 à 57</b></td></tr>
+          <tr><td style="border:0;color:#777">Date</td><td style="border:0"><b>26/11/2026</b></td></tr>
+        </table>
+        <div style="position:absolute;left:28px;right:28px;bottom:70px"><div style="border:1px solid #bbb;height:62px;position:relative;font-size:9.5px;color:#888"><span style="position:absolute;left:6px;top:4px">Rédacteur — nom, date, visa</span></div></div>
+        <div class="cart" style="--fs:9.5px;--b:1.3px;position:absolute;right:28px;bottom:18px"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 45</div><div class="c">TEM</div></div></div>
+      </div>
+      <div style="color:#5d6679;text-align:center;margin-top:5px;font-size:10px">Exemple de page de garde (modèle proposé, valeurs fictives)</div>
+    </div>
+    <div style="flex:1">
+      <div class="win big" style="padding:12px;font-size:11.5px">
+        <div class="sec" style="margin-top:0;font-size:12px">Page de garde</div>
+        <div class="row2"><i class="cb on"></i>Générer la page de garde avec le foliotage</div>
+        <div class="row2" style="margin-top:5px"><span class="rb on"></span>Insérer <b>avant</b> la 1ʳᵉ page <span class="rb" style="margin-left:14px"></span>Fichier séparé</div>
+        <div class="lab" style="font-size:10.5px">Folio de la page de garde</div>
+        <div class="row2"><span class="rb on"></span>Numéroter (folio 45) <span class="rb" style="margin-left:14px"></span>Ne pas numéroter</div>
+        <div class="lab" style="font-size:10.5px">Contenu affiché</div>
+        <div class="grid3" style="gap:4px 8px"><span><i class="cb on"></i>Site</span><span><i class="cb on"></i>REE</span><span><i class="cb on"></i>Indice</span><span><i class="cb on"></i>Type d'arrêt</span><span><i class="cb on"></i>Cycle</span><span><i class="cb on"></i>Tranche(s)</span><span><i class="cb on"></i>Pages/folios</span><span><i class="cb on"></i>Date</span><span><i class="cb on"></i>Cadre visa</span></div>
+        <div class="row2" style="margin-top:11px"><span class="btn blue" style="padding:3px 10px">Générer une page de garde seule…</span></div>
+      </div>
+      <ul style="margin-top:12px;font-size:12px">
+        <li>La page de garde est dessinée par Annexio (texte et traits vectoriels), au format de la 1ʳᵉ page du PDF.</li>
+        <li>Elle reçoit elle-même un cartouche (folio de départ − 1) si l'option est cochée.</li>
+        <li>« Générer une page de garde seule » produit un PDF d'une page, sans ouvrir de document.</li>
+      </ul>
+      <table style="font-size:11.5px;margin-top:10px"><tr><th>Champ de la page de garde</th><th>Source</th></tr><tr><td>Site · REE · Indice · Type d'arrêt · Cycle · Tranche(s)</td><td>Formulaire de l'onglet ReeMaker</td></tr><tr><td>Pages / folios</td><td>Calculé : nombre de pages, folio de départ → dernier folio</td></tr><tr><td>Date</td><td>Date du jour (modifiable)</td></tr><tr><td>Cadre visa</td><td>Zone vide à remplir à la main</td></tr></table>
+      <div class="q" style="font-size:12px;margin-top:10px"><b>Question importante :</b> avez-vous un <b>modèle</b> de page de garde (Word / PDF) à reproduire ? Je n'ai pas vu celle de ReeMaker++ ; le modèle ci-contre n'est qu'une proposition.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>7 / 9</span></div>
+</section>
+
+<!-- ══════════ 8. MAQUETTE : PARAMÈTRES + FIN ══════════ -->
+<section class="page">
+  <h2><span class="tag">MAQUETTE 5</span>Paramètres ReeMaker et fin du foliotage</h2>
+  <p class="sub">Les listes et le style du cartouche se règlent une fois ; le résultat se récupère en un clic.</p>
+  <div class="cols" style="gap:16px">
+    <div style="flex:1">
+      <div class="win big" style="padding:12px;font-size:11px">
+        <div class="sec" style="margin-top:0;font-size:12px">Paramètres ReeMaker <span class="hint">(dans l'onglet Paramètres existant)</span></div>
+        <div class="lab">Sites proposés</div>
+        <div class="inp" style="padding:3px 6px">SITE EXEMPLE ⌄ <span class="hint">· + ajouter · − retirer</span></div>
+        <div class="lab">Types d'arrêt</div>
+        <div class="row2"><span class="btn">TEM</span><span class="btn">AS</span><span class="btn">VP</span><span class="btn">+</span></div>
+        <div class="lab">Types d'arrêt qui demandent un cycle</div>
+        <div class="row2"><i class="cb"></i>TEM <i class="cb on" style="margin-left:8px"></i>AS <i class="cb on" style="margin-left:8px"></i>VP</div>
+        <div class="lab">Nombre de tranches proposées</div><div class="inp" style="width:60px">0 – 9</div>
+        <div class="sec" style="font-size:12px">Style du cartouche</div>
+        <div class="row2"><div style="flex:1"><div class="lab" style="margin-top:0">Couleur</div><div class="row2"><span style="width:16px;height:16px;background:#d90000;border-radius:3px;display:inline-block"></span>Rouge</div></div><div style="flex:1"><div class="lab" style="margin-top:0">Taille de base (pt)</div><div class="inp" style="width:56px">11</div></div></div>
+        <div class="row2" style="margin-top:6px"><i class="cb on"></i>Fond blanc <i class="cb on" style="margin-left:10px"></i>Garder la position pour la suite</div>
+        <div class="lab">Modèle des 3 lignes</div>
+        <table style="font-size:10px; background:#161616; color:#ddd">
+          <tr><td style="border-color:#444;width:22%">Ligne 1</td><td style="border-color:#444" colspan="2">Site de {site} {tranche}</td></tr>
+          <tr><td style="border-color:#444">Ligne 2</td><td style="border-color:#444">REE {ree}</td><td style="border-color:#444">Ind. {indice}</td></tr>
+          <tr><td style="border-color:#444">Ligne 3</td><td style="border-color:#444">Folio {folio}</td><td style="border-color:#444">{arret}</td></tr>
+        </table>
+        <div class="row2" style="margin-top:9px"><span class="btn">Réinitialiser</span><span class="hint" style="font-size:9.5px">Mémorisé automatiquement</span></div>
+      </div>
+    </div>
+    <div style="flex:1.12">
+      <div class="win big" style="height:80mm;font-size:11px">
+        <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+        <div class="tabs"><span class="h">Annexio</span><span class="tab">📄 Fichier</span><span class="tab">⚙ Paramètres</span><span class="tab on">🗂 ReeMaker</span></div>
+        <div class="banner" style="background:#10281b;border-color:#1e6a45;color:#7be3ab;font-size:11px"><b>✔ Foliotage terminé</b><span>12 pages · folios 46 à 57 · page de garde (folio 45) ajoutée</span></div>
+        <div style="padding:10px 12px;flex:1">
+          <div class="row2"><span class="btn red" style="padding:4px 11px">Enregistrer le PDF folioté…</span><span class="btn" style="padding:4px 10px">↩ Reprendre le foliotage</span></div>
+          <div class="hint" style="margin-top:9px;font-size:10px">Nom proposé : FNC 228 exemple_folioté.pdf — le fichier d'origine n'est jamais remplacé.</div>
+          <div style="margin-top:12px;font-size:10px;color:#aaa">Récapitulatif : p.1→46 · p.2→47 · p.3→48 · … · p.12→57</div>
+        </div>
+        <div class="bar"><span class="ok">✔ 12 page(s) foliotée(s) : D:\Docs\FNC 228 exemple_folioté.pdf</span><span class="sp"><span class="btn">Ouvrir le PDF</span><span class="btn">Ouvrir le dossier</span></span></div>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <h3>Sécurités prévues</h3>
+        <ul style="font-size:12px">
+          <li>Refus d'écraser le PDF d'origine (déjà en place dans Annexio).</li>
+          <li>Rien n'est écrit sur disque avant « Enregistrer… ».</li>
+          <li>Avertissement si le cartouche déborde de la page ou chevauche un tampon déjà posé.</li>
+          <li>Folios recalculés si on saute ou revient en arrière : <b>aucun trou ni doublon</b>.</li>
+          <li>Annuler / rétablir (Ctrl+Z / Ctrl+Y) sur les champs du formulaire.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="cols" style="margin-top:10px;align-items:stretch">
+    <div class="step"><b>1 · Préparation</b>Formulaire + aperçu. Bouton « Démarrer le foliotage ».</div><div class="arrow">▶</div>
+    <div class="step"><b>2 · Foliotage</b>Page par page : placer, valider. « Annuler » revient à 1 sans rien écrire.</div><div class="arrow">▶</div>
+    <div class="step"><b>3 · Terminé</b>« Enregistrer… », puis Ouvrir le PDF / le dossier. « Reprendre » revient à 2.</div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>8 / 9</span></div>
+</section>
+
+<!-- ══════════ 9. PLAN ET QUESTIONS ══════════ -->
+<section class="page" style="font-size:13px">
+  <h2><span class="tag">PLAN</span>Livraison, tests et questions à valider</h2>
+  <p class="sub">Rien n'est codé tant que vous n'avez pas validé ces maquettes.</p>
+  <div class="cols">
+    <div style="flex:1.05">
+      <h3>Étapes de livraison (une version = +0,0.1)</h3>
+      <table>
+        <tr><th style="width:15%">Version</th><th>Contenu</th></tr>
+        <tr><td><b>1.1.18</b></td><td>Brique « cartouche » (dessin vectoriel en tableau, 4 orientations, zoom, pages pivotées) + onglet <b>ReeMaker</b> : formulaire, aperçu en direct, foliotage page par page, enregistrement.</td></tr>
+        <tr><td><b>1.1.19</b></td><td><b>Page de garde</b> (dans le foliotage et seule).</td></tr>
+        <tr><td><b>1.1.20</b></td><td><b>Tampons personnalisés</b> 1 et 2 + réglages ReeMaker (listes, style, modèle des lignes).</td></tr>
+      </table>
+      <h3 style="margin-top:10px">Comment c'est construit</h3>
+      <ul>
+        <li><b>Bibliothèque</b> (<code>lib.rs</code>) : module <code>cartouche</code> — dessine tableau + texte dans le PDF, avec rotation de page ; module <code>couverture</code> pour la page de garde. Testés sans interface.</li>
+        <li><b>Interface</b> : nouvel onglet, état « foliotage en cours » (page courante, positions, folios), aperçu qui dessine le même cartouche que le PDF final.</li>
+        <li><b>Mémorisation</b> : nouveaux champs dans le fichier de réglages existant (anciens réglages conservés).</li>
+        <li>Aucune nouvelle dépendance réseau ; l'application reste hors ligne (hors vérification de mise à jour).</li>
+      </ul>
+      <h3 style="margin-top:10px">Comment je le vérifierai</h3>
+      <ul>
+        <li>Tests automatiques : texte des cellules, incrément des folios, pages pivotées 0/90/180/270°, débordement.</li>
+        <li>Captures de l'application lancée (comme pour les versions précédentes) comparées à ces maquettes.</li>
+        <li>Compilation Windows. <b>Non testé sous Windows</b> par moi : l'essai final reste chez vous.</li>
+      </ul>
+    </div>
+    <div style="flex:.95">
+      <h3>Questions pour vous (réponses courtes suffisent)</h3>
+      <div class="q"><b>1.</b> Nom de l'onglet : « <b>ReeMaker</b> » (comme votre logiciel) ou un autre nom ?</div>
+      <div class="q"><b>2.</b> Sigles : « Site de … <b>1</b> » = numéro de <b>tranche</b> ? Si <b>plusieurs tranches</b> sont cochées : afficher « 1-2 », « 1, 2 », ou un cartouche par tranche ?</div>
+      <div class="q"><b>3.</b> Le <b>cycle</b> doit-il apparaître dans le cartouche ou seulement sur la page de garde ? Pour quels types d'arrêt est-il actif ?</div>
+      <div class="q"><b>4.</b> <b>Page de garde</b> : avez-vous un modèle à reproduire ? Quels champs doit-elle contenir ?</div>
+      <div class="q"><b>5.</b> <b>Tampons personnalisés 1 et 2</b> : à quoi servent-ils chez vous ?</div>
+      <div class="q"><b>6.</b> Validation : <b>clic droit</b> et <b>Entrée</b> vous conviennent-ils pour « valider et page suivante » ?</div>
+      <div class="q"><b>7.</b> Le folio est-il <b>par page</b> (46, 47, 48…) même si certaines pages sont ignorées (« Passer ») ?</div>
+      <div class="note"><b>Une dernière précision :</b> ces maquettes reprennent les <b>fonctions</b> de ReeMaker++ avec l'habillage d'Annexio ; elles ne copient ni son apparence ni ses textes.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Annexio · Onglet ReeMaker — maquettes</span><span>9 / 9</span></div>
+</section>
+
+</body>
+</html>
