@@ -1,0 +1,343 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Annexio — barre d'étapes : 3 propositions</title><style>
+@page { size: 297mm 210mm; margin: 0; }
+:root { --red:#d90000; --ink:#1d2433; --mut:#5d6679; --line:#d9dde6; --soft:#f4f6fa; --acc:#0a5578; }
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; }
+body { font-family: Inter, "DejaVu Sans", sans-serif; color: var(--ink); font-size: 11.5px; line-height: 1.45; }
+.page { width:297mm; height:210mm; padding:13mm 15mm 11mm; position:relative; overflow:hidden; page-break-after:always; background:#fff; }
+.page:last-child { page-break-after:auto; }
+h1 { font-size:27px; margin:0 0 4px; letter-spacing:-.4px; }
+h2 { font-size:19px; margin:0 0 3px; letter-spacing:-.2px; }
+h3 { font-size:12.5px; margin:0 0 4px; }
+.sub { color:var(--mut); margin:0 0 9px; }
+.tag { display:inline-block; background:var(--red); color:#fff; font-size:9px; font-weight:700; padding:1px 7px; border-radius:9px; letter-spacing:.4px; vertical-align:2px; margin-right:6px; }
+.foot { position:absolute; left:15mm; right:15mm; bottom:5.5mm; display:flex; justify-content:space-between; color:#8b93a5; font-size:8.5px; border-top:1px solid var(--line); padding-top:3px; }
+.cols { display:flex; gap:12px; }
+.card { background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:9px 11px; }
+.card p, .card ul { margin:3px 0; }
+ul { padding-left:16px; margin:3px 0; }
+li { margin:1.5px 0; }
+.note { border-left:3px solid var(--red); background:#fff5f5; padding:5px 9px; border-radius:0 6px 6px 0; margin:6px 0; }
+.q { border-left:3px solid #e0a100; background:#fff9e8; padding:5px 9px; border-radius:0 6px 6px 0; margin:5px 0; }
+table { border-collapse:collapse; width:100%; }
+th, td { border:1px solid var(--line); padding:3px 7px; text-align:left; vertical-align:top; }
+th { background:var(--soft); font-size:10.5px; }
+.pill { display:inline-block; border:1px solid var(--line); background:#fff; border-radius:9px; padding:0 6px; font-size:9.5px; color:var(--mut); }
+.flow { display:flex; align-items:stretch; gap:6px; margin:8px 0; }
+.step { flex:1; background:#fff; border:1.5px solid var(--acc); border-radius:8px; padding:6px 8px; font-size:10.5px; position:relative; }
+.step b { display:block; color:var(--acc); font-size:10px; margin-bottom:1px; }
+.arrow { align-self:center; color:var(--acc); font-weight:700; }
+
+/* ── cartouche ── */
+.cart { display:inline-block; border:var(--b,1.5px) solid var(--red); color:var(--red); background:#fff; font-family: FreeSans, Arial, Helvetica, sans-serif; font-size:var(--fs,11px); line-height:1.3; text-align:left; white-space:nowrap; }
+.cart .row { display:flex; border-top:var(--b,1.5px) solid var(--red); }
+.cart .row:first-child { border-top:0; }
+.cart .c { padding:1px 6px; }
+.cart .c + .c { border-left:var(--b,1.5px) solid var(--red); }
+.cart .g { flex:1; }
+.cart .r { text-align:right; }
+.cart.empty { border:1.5px dashed #b8bfce; color:#9aa2b4; background:#fafbfd; }
+.cart.empty .c { padding:5px 10px; }
+
+/* ── fenêtre Annexio (thème sombre) ── */
+.win { width:100%; background:#1b1b1b; color:#d8d8d8; border:1px solid #444; border-radius:7px; overflow:hidden; font-size:9px; line-height:1.35; display:flex; flex-direction:column; box-shadow:0 3px 14px #0003; }
+.titlebar { background:#2b2b2b; padding:3px 9px; display:flex; align-items:center; gap:6px; border-bottom:1px solid #111; }
+.titlebar .dot { width:7px; height:7px; border-radius:50%; background:#555; }
+.titlebar .t { margin-left:4px; color:#bbb; font-size:8.5px; }
+.tabs { display:flex; align-items:center; gap:7px; padding:5px 9px; border-bottom:1px solid #303030; background:#1f1f1f; }
+.tabs .h { font-size:12px; color:#8a8a8a; margin-right:10px; }
+.tab { padding:2px 8px; border-radius:6px; color:#ddd; }
+.tab.on { background:var(--acc); color:#fff; }
+.tab.new { box-shadow:0 0 0 1.5px var(--red); }
+.tabs .v { margin-left:auto; color:#777; font-size:7.5px; }
+.body { display:flex; flex:1; min-height:0; }
+.left { width:var(--lw,185px); border-right:1px solid #333; padding:7px 8px; overflow:hidden; background:#1c1c1c; }
+.thumbs { width:76px; border-right:1px solid #333; padding:6px 8px; background:#1c1c1c; }
+.th { width:54px; height:70px; background:#fff; border:1px solid #777; border-radius:2px; margin-bottom:16px; position:relative; }
+.th.cur { border:2px solid var(--red); }
+.th i { position:absolute; right:2px; top:2px; width:6px; height:6px; border-radius:50%; background:var(--red); }
+.th span { position:absolute; bottom:-12px; left:0; right:0; text-align:center; font-size:6.5px; color:#999; }
+.prev { flex:1; background:#181818; position:relative; padding:6px 8px; }
+.zoom { display:flex; gap:4px; align-items:center; margin-bottom:5px; }
+.bar { display:flex; align-items:center; gap:6px; padding:4px 9px; border-top:1px solid #333; background:#1f1f1f; }
+.bar .ok { color:#2fb36a; }
+.bar .sp { margin-left:auto; display:flex; gap:7px; align-items:center; }
+.mouse { display:inline-block; width:13px; height:20px; border:1.5px solid #bbb; border-radius:7px 7px 8px 8px; position:relative; flex:none; }
+.mouse::before { content:''; position:absolute; top:0; width:50%; height:8px; background:#2fb36a; }
+.mouse.l::before { left:0; border-radius:6px 0 0 0; }
+.mouse.r::before { right:0; border-radius:0 6px 0 0; }
+.btn { white-space:nowrap; display:inline-block; background:#343434; border-radius:4px; padding:1.5px 7px; color:#ddd; }
+.btn.red { background:var(--red); color:#fff; font-weight:700; }
+.btn.blue { background:var(--acc); color:#fff; }
+.btn.big { padding:4px 8px; text-align:center; display:block; }
+.lab { color:#9a9a9a; font-size:8.5px; margin:5px 0 1.5px; }
+.sec { color:#fff; font-weight:700; margin:7px 0 3px; font-size:9.5px; }
+.inp { background:#0c0c0c; border-radius:3px; padding:1.5px 5px; min-height:14px; color:#eee; display:block; }
+.inp.dis { color:#666; background:#141414; }
+.row2 { display:flex; gap:5px; align-items:center; }
+.cb { display:inline-block; width:8px; height:8px; border:1px solid #888; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+.cb.on { background:var(--acc); border-color:#5ab; }
+.rb { display:inline-block; width:8px; height:8px; border:1px solid #888; border-radius:50%; margin-right:4px; vertical-align:-1px; }
+.rb.on { background:radial-gradient(#fff 0 28%, var(--acc) 32%); border-color:#5ab; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5px 4px; }
+.sheet { background:#fff; position:relative; box-shadow:0 0 0 2px #0006; margin:0 auto; }
+.sheet .ln { position:absolute; left:8%; right:8%; height:2.5px; background:#d7dbe3; border-radius:1px; }
+.sheet .bl { position:absolute; background:#e5e8ef; border-radius:2px; }
+.banner { background:#2a1f10; border:1px solid #6a4a10; color:#ffcf70; padding:3px 8px; border-radius:4px; margin-bottom:5px; display:flex; gap:8px; align-items:center; }
+.hint { color:#999; font-size:7.5px; }
+.callout { position:absolute; background:var(--red); color:#fff; font-weight:700; font-size:9px; width:16px; height:16px; border-radius:50%; text-align:center; line-height:16px; box-shadow:0 0 0 2px #fff; }
+.legend { counter-reset:n; margin:0; padding:0; list-style:none; }
+.legend li { counter-increment:n; padding-left:21px; position:relative; margin:4px 0; }
+.legend li::before { content:counter(n); position:absolute; left:0; top:1px; width:15px; height:15px; border-radius:50%; background:var(--acc); color:#fff; font-weight:700; font-size:9px; text-align:center; line-height:15px; }
+.orient { display:flex; gap:7px; }
+.tile { width:92px; height:118px; background:#262626; border:1px solid #444; border-radius:5px; position:relative; }
+.tile.on { border:2px solid var(--acc); background:#1d2c36; }
+.tile .cart { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(var(--rot,0deg)); --fs:6.2px; --b:1px; }
+.tile em { position:absolute; bottom:1px; left:0; right:0; text-align:center; font-style:normal; font-size:7.5px; color:#aaa; }
+.bd { font-style:normal; display:inline-block; background:var(--acc); color:#fff; border-radius:50%; font-size:.55em; width:1.55em; height:1.55em; line-height:1.55em; text-align:center; vertical-align:middle; margin-left:.45em; font-family:Inter,sans-serif; font-weight:700; }
+.vl { position:absolute; top:8%; bottom:8%; width:2.5px; background:#d7dbe3; border-radius:1px; }
+.bad { position:absolute; left:0; right:0; bottom:-17px; text-align:center; font-size:9px; font-weight:700; }
+.win.big { font-size:10.5px; }
+.win { position:relative; }
+.menubtn { background:#2d2d2d; border:1px solid #444; border-radius:5px; padding:1px 8px; color:#eee; }
+.menubtn.on { background:#3a3a3a; border-color:#888; }
+.sepv { width:1px; height:14px; background:#444; margin:0 2px; }
+.filebar { display:flex; gap:9px; align-items:center; padding:3px 9px; background:#242424; border-bottom:1px solid #303030; }
+.filebar .sp { margin-left:auto; display:flex; gap:6px; }
+.nb { display:inline-block; background:var(--red); color:#fff; border-radius:50%; width:13px; height:13px; line-height:13px; text-align:center; font-size:8px; font-weight:700; font-style:normal; margin-left:4px; vertical-align:1px; }
+.dd { position:absolute; background:#2a2a2a; border:1px solid #666; border-radius:6px; padding:4px 0; box-shadow:0 6px 18px #000a; z-index:5; min-width:190px; font-size:10px; }
+.dd div { padding:3px 12px; display:flex; justify-content:space-between; gap:18px; }
+.dd div.sel { background:var(--acc); }
+.dd .k { color:#9a9a9a; }
+.dd hr { border:0; border-top:1px solid #444; margin:3px 0; }
+.subnav { width:150px; border-right:1px solid #333; padding:8px 6px; background:#1c1c1c; }
+.subnav div { padding:4px 9px; border-radius:5px; margin-bottom:2px; }
+.subnav div.on { background:var(--acc); color:#fff; }
+.kbd { display:inline-block; border:1px solid #c3c9d6; border-bottom-width:2px; background:#fff; border-radius:4px; padding:0 5px; font-size:9.5px; font-family:inherit; }
+
+/* ───── barre d'étapes ───── */
+.win { position:relative; }
+.gear { color:#bbb; font-size:13px; padding:0 4px; }
+.sp2 { margin-left:auto; display:flex; gap:8px; align-items:center; }
+/* A : chevrons */
+.stepsA { display:flex; align-items:center; gap:0; padding:5px 9px; background:#1f1f1f; border-bottom:1px solid #303030; }
+.stepsA .logo { color:#8a8a8a; font-size:12px; margin-right:12px; }
+.chev { position:relative; padding:4px 22px 4px 20px; margin-right:-7px; background:#2c2c2c; color:#cfcfcf; clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,12px 50%); display:flex; align-items:center; gap:6px; min-width:120px; }
+.chev:first-of-type { clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%); padding-left:12px; }
+.chev i { font-style:normal; width:14px; height:14px; border-radius:50%; border:1px solid #777; text-align:center; line-height:12px; font-size:8px; flex:none; }
+.chev small { color:#8f8f8f; font-size:7.5px; display:block; line-height:1.1; }
+.chev b { display:block; line-height:1.15; }
+.chev.done { background:#1e3328; color:#b8e6c8; } .chev.done i { background:#2fb36a; border-color:#2fb36a; color:#fff; }
+.chev.on { background:var(--acc); color:#fff; } .chev.on i { background:#fff; color:var(--acc); border-color:#fff; font-weight:700; }
+.chev.on small, .chev.done small { color:#cfe9f5; }
+/* B : pages façon DaVinci */
+.pagesB { display:flex; align-items:center; padding:5px 12px 0; background:#161616; border-bottom:1px solid #303030; }
+.pagesB .proj { color:#aaa; font-size:9px; min-width:150px; }
+.pagesB .proj b { color:#eee; font-size:11px; display:block; }
+.pgs { display:flex; gap:6px; margin:0 auto; align-items:flex-end; }
+.pg { text-align:center; padding:4px 16px 5px; border-radius:7px 7px 0 0; color:#999; min-width:84px; border-bottom:3px solid transparent; }
+.pg .ic { font-size:16px; display:block; line-height:1.15; }
+.pg small { font-size:7px; color:#777; display:block; }
+.pg.done { color:#bde7cc; } .pg.done small { color:#5fae7c; }
+.pg.on { background:#262626; color:#fff; border-bottom-color:var(--red); } .pg.on small { color:#aaa; }
+.rail { height:3px; background:#2b2b2b; position:relative; }
+.rail i { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,#2fb36a,#0a5578); }
+/* C : nœuds + flèches */
+.nodesC { display:flex; align-items:center; gap:0; padding:7px 12px; background:#1d1d1d; border-bottom:1px solid #303030; }
+.nodesC .logo { color:#8a8a8a; font-size:12px; margin-right:14px; }
+.node { border:1.5px solid #4a4a4a; border-radius:10px; padding:4px 12px; min-width:140px; background:#262626; }
+.node b { display:block; color:#eee; font-size:10px; }
+.node small { color:#8f8f8f; font-size:7.5px; }
+.node.done { border-color:#2fb36a; } .node.done b::after { content:' ✓'; color:#2fb36a; }
+.node.on { border-color:#46a6d6; background:#12303f; box-shadow:0 0 0 2px #46a6d655; }
+.node.skip { border-style:dashed; color:#777; }
+.arr { color:#6a6a6a; font-size:15px; padding:0 7px; letter-spacing:-2px; }
+.arr.on { color:#46a6d6; }
+.tl { background:#161616; border-top:1px solid #333; padding:4px 9px 6px; }
+.tl .rule { display:flex; margin-left:62px; color:#777; font-size:6.5px; }
+.tl .rule span { flex:1; border-left:1px solid #333; padding-left:2px; }
+.tl .trk { display:flex; align-items:center; margin-top:2px; }
+.tl .trk .nm { width:62px; color:#aaa; font-size:7.5px; }
+.tl .clips { display:flex; flex:1; gap:1px; }
+.clip { flex:1; height:13px; border-radius:2px; font-size:6.5px; line-height:13px; padding-left:3px; color:#fff; overflow:hidden; white-space:nowrap; }
+.clip.r { background:#a31515; } .clip.a { background:#1d6a8a; } .clip.f { background:#555; } .clip.off { background:#2a2a2a; color:#666; border:1px dashed #555; }
+.head { position:absolute; width:2px; background:#ffd34d; top:0; bottom:0; }
+.inspR { width:210px; border-left:1px solid #333; padding:7px 9px; background:#1c1c1c; }
+.strip { border:1px solid #444; border-radius:5px; overflow:hidden; margin-top:4px; }
+.tiny { font-size:9px; color:#5d6679; margin:3px 0 1px; }
+.pc { display:flex; gap:12px; margin-top:7px; } .pc > div { flex:1; }
+.pro { color:#1a8a4f; } .con { color:#b3261e; }
+.win .body{overflow:hidden}
+.win .bar{flex:none}
+</style></head><body><section class="page">
+  <h2><span class="tag">BARRE D'ÉTAPES</span>Façon logiciel de montage : 3 propositions</h2>
+  <p class="sub">D'après votre schéma. Choisissez la présentation de la barre du haut ; le contenu des 4 étapes est commun (page 2).</p>
+  <div class="card" style="padding:14px 18px">
+    <h3>Votre schéma</h3>
+    <div style="display:flex;align-items:center;gap:10px;margin:10px 0 4px">
+      <div style="border:2px solid #3c4a9e;border-radius:16px;padding:12px 22px;min-width:132px;text-align:center;font-family:'Comic Neue',cursive;font-size:16px;color:#2a3485;background:#fff">Fichier<div style="font-size:8px;color:#6b739f;margin-top:2px;font-family:Inter">ouvrir le PDF</div></div><span style="font-size:22px;color:#3c4a9e">→</span><div style="border:2px solid #3c4a9e;border-radius:16px;padding:12px 22px;min-width:132px;text-align:center;font-family:'Comic Neue',cursive;font-size:16px;color:#2a3485;background:#fff">ReeMaker<div style="font-size:8px;color:#6b739f;margin-top:2px;font-family:Inter">cartouche + folios</div></div><span style="font-size:22px;color:#3c4a9e">→</span><div style="border:2px solid #3c4a9e;border-radius:16px;padding:12px 22px;min-width:132px;text-align:center;font-family:'Comic Neue',cursive;font-size:16px;color:#2a3485;background:#fff">Annexio<div style="font-size:8px;color:#6b739f;margin-top:2px;font-family:Inter">tampon « Annexe X »</div></div><span style="font-size:22px;color:#3c4a9e">→</span><div style="border:2px solid #3c4a9e;border-radius:16px;padding:12px 22px;min-width:132px;text-align:center;font-family:'Comic Neue',cursive;font-size:16px;color:#2a3485;background:#fff">Export<div style="font-size:8px;color:#6b739f;margin-top:2px;font-family:Inter">PDF final</div></div>
+    </div>
+    <div class="tiny">Redessiné proprement. La barre du haut devient ce <b>flux de travail</b> : on avance de gauche à droite, comme dans un logiciel de montage (Média → Montage → Étalonnage → Livraison).</div>
+  </div>
+  <div class="cols" style="margin-top:9px">
+    <div style="flex:1.15">
+      <h3>Ce que je comprends (et ce que cela change)</h3>
+      <ul>
+        <li><b>Les étapes s'enchaînent sur le même document.</b> Le cartouche ReeMaker <i>puis</i> le tampon Annexio s'empilent sur le même PDF ; <b>un seul Export</b> écrit le résultat. Rien n'est écrit avant l'export (comme un projet de montage qu'on exporte à la fin).</li>
+        <li><b>Chaque étape est facultative</b> : on peut sauter ReeMaker ou Annexio (étape « ignorée »).</li>
+        <li><b>L'aperçu montre tous les « calques »</b> déjà posés (cartouche + tampon), même quand on travaille sur l'autre étape.</li>
+        <li><b>Paramètres</b> n'est pas une étape : engrenage ⚙ à droite de la barre.</li>
+        <li>Retour libre en arrière : cliquer sur une étape terminée pour la modifier.</li>
+      </ul>
+    </div>
+    <div style="flex:.85">
+      <div class="note"><b>Différence avec les maquettes précédentes.</b> Avant, chaque outil produisait son propre PDF. Avec votre schéma, ReeMaker et Annexio se <b>cumulent</b> avant l'export. C'est plus puissant, mais à confirmer (question 2, dernière page).</div>
+      <div class="q"><b>Nom :</b> l'application et l'étape s'appellent toutes deux « Annexio ». Je garde votre schéma ; on peut renommer l'étape en « Annexe » pour éviter la confusion.</div>
+      <h3 style="margin-top:8px">État d'une étape</h3>
+      <div class="row2" style="gap:12px;flex-wrap:wrap"><span><b style="color:#2fb36a">✓</b> terminée</span><span><b style="color:#0a5578">●</b> en cours</span><span><b style="color:#888">○</b> à faire</span><span><b style="color:#b8860b">⇥</b> ignorée</span><span><b style="color:#c00">⚠</b> à corriger</span></div>
+    </div>
+  </div>
+  <h3 style="margin-top:12px">Scénario d'une session</h3>
+  <div class="flow">
+    <div class="step"><b>1 · Fichier</b>J'ouvre « FNC 228 exemple.pdf » (12 pages). Les miniatures apparaissent.</div><div class="arrow">▶</div>
+    <div class="step"><b>2 · ReeMaker</b>Je remplis le dossier (site, REE, indice, folio 46…), je pose le cartouche page par page. Les 12 pages sont foliotées 46 à 57.</div><div class="arrow">▶</div>
+    <div class="step"><b>3 · Annexio</b>J'ajoute « Annexe 13 Folio n/12 » en bas à gauche de chaque page. Le cartouche reste visible.</div><div class="arrow">▶</div>
+    <div class="step"><b>4 · Export</b>Je vérifie le récapitulatif, j'exporte « …_folioté.pdf », puis j'ouvre le PDF ou son dossier.</div>
+  </div>
+  <div class="foot"><span>Annexio · Barre d'étapes — 3 propositions</span><span>1 / 6</span></div>
+</section><section class="page">
+  <h2><span class="tag">CONTENU</span>Ce qu'il y a dans chacune des 4 étapes</h2>
+  <p class="sub">Commun aux 3 propositions : seule la façon d'afficher la barre et les panneaux change.</p>
+  <div class="cols" style="gap:10px;align-items:stretch">
+    <div style="flex:1"><div class="win big" style="padding:13px;font-size:11.5px;height:auto"><div class="sec" style="margin-top:0;font-size:11.5px">1 · Fichier </div><div style="border:1.5px dashed #666;border-radius:7px;padding:14px 8px;text-align:center;color:#aaa">Glissez un PDF ici<br><span class="btn blue" style="margin-top:4px">📂 Ouvrir…</span> <span class="hint">Ctrl+O</span></div>
+<div class="lab">Récents</div><div style="color:#7fc0e8;line-height:1.5">FNC 228 exemple.pdf<br>Procédure B.pdf<br>Annexe 13.pdf</div>
+<div class="lab">Fichier ouvert</div><div>📄 <b>FNC 228 exemple.pdf</b><br><span class="hint">12 pages · 1,2 Mo · A4</span></div>
+<div class="row2" style="margin-top:6px"><span class="btn">Fermer ✕</span><span class="btn blue" style="margin-left:auto">Suivant : ReeMaker ▸</span></div></div></div><div style="flex:1"><div class="win big" style="padding:13px;font-size:11.5px;height:auto"><div class="sec" style="margin-top:0;font-size:11.5px">2 · ReeMaker </div><div class="row2"><span class="rb on"></span>Appliquer le cartouche <span class="rb" style="margin-left:6px"></span>Ignorer cette étape</div>
+<div class="lab">Dossier</div><div class="inp">SITE EXEMPLE · REE 001 · Ind. A</div>
+<div class="row2" style="margin-top:3px"><div class="inp" style="flex:1">Folio 46 ⇅</div><div class="inp" style="flex:1">TEM ⌄</div><div class="inp" style="flex:1">Tranche 0</div></div>
+<div class="lab">Foliotage</div><div class="ok" style="color:#2fb36a">✔ 12 pages posées · folios 46 à 57</div>
+<div class="row2" style="margin-top:6px"><span class="btn red">▶ Démarrer / modifier</span><span class="btn blue" style="margin-left:auto">Suivant ▸</span></div></div></div><div style="flex:1"><div class="win big" style="padding:13px;font-size:11.5px;height:auto"><div class="sec" style="margin-top:0;font-size:11.5px">3 · Annexio </div><div class="row2"><span class="rb on"></span>Appliquer le tampon <span class="rb" style="margin-left:6px"></span>Ignorer cette étape</div>
+<div class="row2" style="margin-top:3px"><div style="flex:1"><div class="lab">Annexe (X)</div><div class="inp">1</div></div><div style="flex:1"><div class="lab">1ᵉʳ folio</div><div class="inp">1</div></div></div>
+<div class="lab">Texte</div><div class="inp">Annexe {annexe} Folio {n}/{total} ⌄</div>
+<div class="row2" style="margin-top:4px"><span class="btn">Toutes</span><span class="btn">Paires</span><span class="btn">Impaires</span></div>
+<div class="row2" style="margin-top:4px"><span class="btn">↖</span><span class="btn">↗</span><span class="btn">⊙</span><span class="btn">↙</span><span class="btn">↘</span> <span class="hint">position</span></div>
+<div class="row2" style="margin-top:6px"><span class="btn blue" style="margin-left:auto">Suivant : Export ▸</span></div></div></div><div style="flex:1"><div class="win big" style="padding:13px;font-size:11.5px;height:auto"><div class="sec" style="margin-top:0;font-size:11.5px">4 · Export </div><div class="lab">Récapitulatif</div><div style="line-height:1.55"><b style="color:#2fb36a">✓</b> Fichier : FNC 228 exemple.pdf<br><b style="color:#2fb36a">✓</b> ReeMaker : cartouche sur 12 pages<br><b style="color:#2fb36a">✓</b> Annexio : tampon sur 12 pages</div>
+<div class="lab">Nom du fichier</div><div class="inp">FNC 228 exemple_folioté.pdf</div>
+<div class="row2" style="margin-top:6px"><span class="btn red">📤 Exporter le PDF…</span></div>
+<div class="lab">Après l'export</div><div class="row2"><span class="btn">Ouvrir le PDF</span><span class="btn">Ouvrir le dossier</span></div>
+<div class="hint" style="margin-top:3px">Le fichier d'origine n'est jamais remplacé.</div></div></div>
+  </div>
+  <div class="cols" style="margin-top:9px">
+    <div class="card" style="flex:1"><h3>Les deux tampons ensemble</h3><div style="display:flex;gap:14px;align-items:center;margin-top:5px"><div class="sheet" style="width:120px;height:170px"><div class="bl" style="left:12px;top:12px;width:52px;height:30px;background:#cfd6e2"></div><div class="ln" style="top:58px"></div><div class="ln" style="top:67px;right:30%"></div><div class="ln" style="top:76px"></div><div class="bl" style="left:12px;right:12px;top:100px;height:45px"></div><div class="ln" style="top:118px"></div><div class="ln" style="top:127px;right:40%"></div><div class="cart" style="--fs:5px;--b:1px;position:absolute;right:9px;top:9px"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 48</div><div class="c">TEM</div></div></div><div style="display:inline-block;border:1.2px solid var(--red);color:var(--red);background:#fff;font-family:FreeSans,Arial,sans-serif;font-size:8px;padding:1.5px 6px;white-space:nowrap;position:absolute;left:12px;bottom:10px;opacity:.95">Annexe 1 Folio 3/12</div></div><div style="font-size:10.5px"><b>Cartouche ReeMaker</b> (haut droite) et <b>tampon Annexio</b> (bas gauche) sur la même page, dans l'aperçu et dans le PDF exporté.</div></div></div>
+    <div class="card" style="flex:1"><h3>Règles de la chaîne</h3><ul style="font-size:10.5px"><li>« Suivant ▸ » avance d'une étape ; cliquer sur une étape dans la barre y va directement.</li><li>Une étape « Ignorée » est grisée mais ne bloque pas l'export.</li><li>Modifier une étape terminée met à jour l'aperçu de toutes les suivantes.</li><li>L'export est possible dès que Fichier est fait (au moins une étape appliquée).</li><li>Raccourcis : Ctrl+1 à Ctrl+4, Ctrl+, pour ⚙ Paramètres.</li></ul></div>
+  </div>
+  <div class="foot"><span>Annexio · Barre d'étapes — 3 propositions</span><span>2 / 6</span></div>
+</section><section class="page">
+  <h2><span class="tag">PROPOSITION A</span>Barre à chevrons — « le fil d'Ariane »</h2>
+  <p class="sub">La plus proche de votre schéma : 4 chevrons alignés, l'étape active en bleu, les terminées en vert avec un résumé.</p>
+  <div class="win big" style="height:110mm;font-size:10px">
+  <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+  <div class="stepsA"><span class="logo">Annexio</span><div class="chev done"><i>✓</i><div><b>Fichier</b><small>FNC 228 · 12 p.</small></div></div><div class="chev on"><i>2</i><div><b>ReeMaker</b><small>folios 46–57</small></div></div><div class="chev"><i>3</i><div><b>Annexio</b></div></div><div class="chev"><i>4</i><div><b>Export</b></div></div><span class="sp2"><span class="btn">Récents ⌄</span><span class="gear">⚙</span></span></div>
+  <div class="body"><div class="left" style="--lw:250px"><div class="sec" style="margin-top:0">Dossier</div>
+<div class="row2"><div style="flex:2"><div class="lab" style="margin-top:0">Site</div><div class="inp">SITE EXEMPLE</div></div><div style="flex:1.4"><div class="lab" style="margin-top:0">R.E.E.</div><div class="inp">REE 001</div></div><div style="flex:.6"><div class="lab" style="margin-top:0">Ind.</div><div class="inp">A</div></div></div>
+<div class="row2" style="margin-top:2px"><div style="flex:1.2"><div class="lab">Folio départ</div><div class="inp">46 ⇅</div></div><div style="flex:1.3"><div class="lab">Type d'arrêt</div><div class="inp">TEM ⌄</div></div><div style="flex:1"><div class="lab">Cycle</div><div class="inp dis">36 ⇅</div></div></div>
+<div class="sec">Pages</div><div class="row2"><span><span class="rb on"></span>Totalité</span><span style="margin-left:6px"><span class="rb"></span>De</span><span class="inp dis" style="width:24px">1</span>à<span class="inp dis" style="width:24px">12</span></div>
+<div class="sec">Tranche(s)</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px 3px"><span><i class="cb on"></i>0</span><span><i class="cb"></i>1</span><span><i class="cb"></i>2</span><span><i class="cb"></i>3</span><span><i class="cb"></i>4</span><span><i class="cb"></i>5</span><span><i class="cb"></i>6</span><span><i class="cb"></i>7</span><span><i class="cb"></i>8</span><span><i class="cb"></i>9</span></div>
+<div class="row2" style="margin-top:6px">Zoom <span class="inp" style="width:40px">1,2 ⇅</span> <span class="btn blue">Auto</span><span class="btn">0°</span><span class="btn">90°</span></div>
+<div class="btn red big" style="margin-top:7px">▶ Démarrer le foliotage</div></div><div class="thumbs"><div class="th"><i></i><span>1</span></div><div class="th cur"><i></i><span>2</span></div><div class="th"><i></i><span>3</span></div><div class="th"><i></i><span>4</span></div></div><div class="prev"><div class="zoom"><span class="btn">−</span><span style="color:#999">95 %</span><span class="btn">+</span><span class="btn blue">Page entière</span><span class="btn">Largeur</span></div><div class="sheet" style="width:236px;height:334px"><div class="bl" style="left:12px;top:12px;width:52px;height:30px;background:#cfd6e2"></div><div class="ln" style="top:58px"></div><div class="ln" style="top:67px;right:30%"></div><div class="ln" style="top:76px"></div><div class="bl" style="left:12px;right:12px;top:100px;height:90px"></div><div class="ln" style="top:233px"></div><div class="ln" style="top:242px;right:40%"></div><div class="cart" style="--fs:8.5px;--b:1px;position:absolute;right:9px;top:9px"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 48</div><div class="c">TEM</div></div></div></div></div></div>
+  <div class="bar"><span class="ok">Foliotage prêt : 12 pages, folios 46 à 57.</span><span class="sp"><span>Page 2/12</span><span class="btn blue">Suivant : Annexio ▸</span></span></div>
+</div>
+  <div class="tiny">Les autres états de la barre :</div>
+  <div class="strip" style="background:#1b1b1b;zoom:.82"><div class="stepsA"><span class="logo">Annexio</span><div class="chev on"><i>1</i><div><b>Fichier</b><small>FNC 228 · 12 p.</small></div></div><div class="chev"><i>2</i><div><b>ReeMaker</b></div></div><div class="chev"><i>3</i><div><b>Annexio</b></div></div><div class="chev"><i>4</i><div><b>Export</b></div></div><span class="sp2"><span class="btn">Récents ⌄</span><span class="gear">⚙</span></span></div></div>
+  <div style="height:3px"></div>
+  <div class="strip" style="background:#1b1b1b;zoom:.82"><div class="stepsA"><span class="logo">Annexio</span><div class="chev done"><i>✓</i><div><b>Fichier</b><small>FNC 228 · 12 p.</small></div></div><div class="chev done"><i>✓</i><div><b>ReeMaker</b><small>folios 46–57</small></div></div><div class="chev done"><i>✓</i><div><b>Annexio</b><small>tampon Annexe</small></div></div><div class="chev on"><i>4</i><div><b>Export</b></div></div><span class="sp2"><span class="btn">Récents ⌄</span><span class="gear">⚙</span></span></div></div>
+  <div class="pc">
+    <div class="card"><b class="pro">+ Atouts</b><ul style="margin:2px 0"><li>Lecture immédiate du flux « de gauche à droite »</li><li>Très compacte (une seule ligne) : laisse la place à l'aperçu</li><li>Résumé sous chaque étape terminée</li></ul></div>
+    <div class="card"><b class="con">− Limites</b><ul style="margin:2px 0"><li>Moins « monteur » : pas de zone de timeline</li><li>Libellés longs peu lisibles sur petit écran</li></ul></div>
+  </div>
+  <div class="foot"><span>Annexio · Barre d'étapes — 3 propositions</span><span>3 / 6</span></div>
+</section><section class="page">
+  <h2><span class="tag">PROPOSITION B</span>Pages à icônes — « façon DaVinci Resolve »</h2>
+  <p class="sub">Grosses icônes centrées au-dessus des libellés, fine barre de progression dessous, bouton « Exporter… » toujours visible à droite, inspecteur à droite et pellicule des pages en bas.</p>
+  <div class="win big" style="height:106mm;font-size:9.5px">
+  <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+  <div class="pagesB"><div class="proj">Annexio<b>FNC 228 exemple.pdf</b></div><div class="pgs"><div class="pg done"><span class="ic">📄</span>Fichier<small>✓ FNC 228</small></div><div class="pg on"><span class="ic">🗂</span>ReeMaker<small>12 pages</small></div><div class="pg"><span class="ic">🔖</span>Annexio<small>&nbsp;</small></div><div class="pg"><span class="ic">📤</span>Export<small>&nbsp;</small></div></div><div class="sp2" style="min-width:150px;justify-content:flex-end"><span class="gear">⚙</span><span class="btn red">Exporter…</span></div></div><div class="rail"><i style="width:38%"></i></div>
+  <div class="body"><div class="prev" style="display:flex;align-items:center;justify-content:center"><div class="sheet" style="width:222px;height:314px;zoom:.68"><div class="bl" style="left:12px;top:12px;width:52px;height:30px;background:#cfd6e2"></div><div class="ln" style="top:58px"></div><div class="ln" style="top:67px;right:30%"></div><div class="ln" style="top:76px"></div><div class="bl" style="left:12px;right:12px;top:100px;height:84px"></div><div class="ln" style="top:219px"></div><div class="ln" style="top:228px;right:40%"></div><div class="cart" style="--fs:8.2px;--b:1px;position:absolute;right:9px;top:9px"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 48</div><div class="c">TEM</div></div></div></div></div><div class="inspR"><div class="sec" style="margin-top:0">Inspecteur · ReeMaker</div><div class="sec" style="margin-top:0">Dossier</div>
+<div class="row2"><div style="flex:2"><div class="lab" style="margin-top:0">Site</div><div class="inp">SITE EXEMPLE</div></div><div style="flex:1.4"><div class="lab" style="margin-top:0">R.E.E.</div><div class="inp">REE 001</div></div><div style="flex:.6"><div class="lab" style="margin-top:0">Ind.</div><div class="inp">A</div></div></div>
+<div class="row2" style="margin-top:2px"><div style="flex:1.2"><div class="lab">Folio départ</div><div class="inp">46 ⇅</div></div><div style="flex:1.3"><div class="lab">Type d'arrêt</div><div class="inp">TEM ⌄</div></div><div style="flex:1"><div class="lab">Cycle</div><div class="inp dis">36 ⇅</div></div></div>
+<div class="sec">Pages</div><div class="row2"><span><span class="rb on"></span>Totalité</span><span style="margin-left:6px"><span class="rb"></span>De</span><span class="inp dis" style="width:24px">1</span>à<span class="inp dis" style="width:24px">12</span></div>
+<div class="sec">Tranche(s)</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px 3px"><span><i class="cb on"></i>0</span><span><i class="cb"></i>1</span><span><i class="cb"></i>2</span><span><i class="cb"></i>3</span><span><i class="cb"></i>4</span><span><i class="cb"></i>5</span><span><i class="cb"></i>6</span><span><i class="cb"></i>7</span><span><i class="cb"></i>8</span><span><i class="cb"></i>9</span></div>
+<div class="row2" style="margin-top:6px">Zoom <span class="inp" style="width:40px">1,2 ⇅</span> <span class="btn blue">Auto</span><span class="btn">0°</span><span class="btn">90°</span></div>
+<div class="btn red big" style="margin-top:7px">▶ Démarrer le foliotage</div></div></div>
+  <div style="background:#161616;border-top:1px solid #333;padding:5px 9px;display:flex;gap:5px;align-items:flex-end"><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">1</span></div><div style="width:36px;height:46px;background:#fff;border:2px solid var(--red);position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">2</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">3</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">4</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">5</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">6</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">7</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">8</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">9</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">10</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">11</span></div><div style="width:36px;height:46px;background:#fff;border:1px solid #777;position:relative;border-radius:2px;flex:none"><span style="position:absolute;bottom:-11px;left:0;right:0;text-align:center;font-size:6.5px;color:#999">12</span></div></div>
+  <div class="bar"><span class="ok">Foliotage prêt : 12 pages, folios 46 à 57.</span><span class="sp"><span>Page 2/12</span></span></div>
+</div>
+  <div class="tiny">Les autres états de la barre :</div>
+  <div class="strip" style="background:#1b1b1b;zoom:.82"><div class="pagesB"><div class="proj">Annexio<b>FNC 228 exemple.pdf</b></div><div class="pgs"><div class="pg on"><span class="ic">📄</span>Fichier<small>FNC 228</small></div><div class="pg"><span class="ic">🗂</span>ReeMaker<small>&nbsp;</small></div><div class="pg"><span class="ic">🔖</span>Annexio<small>&nbsp;</small></div><div class="pg"><span class="ic">📤</span>Export<small>&nbsp;</small></div></div><div class="sp2" style="min-width:150px;justify-content:flex-end"><span class="gear">⚙</span><span class="btn red">Exporter…</span></div></div><div class="rail"><i style="width:0%"></i></div></div>
+  <div style="height:3px"></div>
+  <div class="strip" style="background:#1b1b1b;zoom:.82"><div class="pagesB"><div class="proj">Annexio<b>FNC 228 exemple.pdf</b></div><div class="pgs"><div class="pg done"><span class="ic">📄</span>Fichier<small>✓ FNC 228</small></div><div class="pg done"><span class="ic">🗂</span>ReeMaker<small>✓ 12 pages</small></div><div class="pg done"><span class="ic">🔖</span>Annexio<small>✓ —</small></div><div class="pg on"><span class="ic">📤</span>Export<small>&nbsp;</small></div></div><div class="sp2" style="min-width:150px;justify-content:flex-end"><span class="gear">⚙</span><span class="btn red">Exporter…</span></div></div><div class="rail"><i style="width:100%"></i></div></div>
+  <div class="pc">
+    <div class="card"><b class="pro">+ Atouts</b><ul style="margin:2px 0"><li>Ressemble le plus aux logiciels de montage connus</li><li>Gros boutons faciles à viser, « Exporter » toujours accessible</li><li>Progression visible d'un coup d'œil</li></ul></div>
+    <div class="card"><b class="con">− Limites</b><ul style="margin:2px 0"><li>Barre plus haute (≈ 1,5 cm) : un peu moins de place pour l'aperçu</li><li>Inspecteur à droite : déplace les habitudes actuelles (formulaire à gauche)</li></ul></div>
+  </div>
+  <div class="foot"><span>Annexio · Barre d'étapes — 3 propositions</span><span>4 / 6</span></div>
+</section><section class="page">
+  <h2><span class="tag">PROPOSITION C</span>Nœuds et flèches + timeline des pages — « le schéma en vrai »</h2>
+  <p class="sub">Votre dessin littéralement : 4 blocs arrondis reliés par des flèches, avec un résumé dans chaque bloc. En bas, une <b>timeline</b> : une piste par étape, un clip par page, une tête de lecture sur la page affichée.</p>
+  <div class="win big" style="height:105mm;font-size:9.5px">
+  <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">Annexio</span></div>
+  <div class="nodesC"><span class="logo">Annexio</span><div class="node done"><b>Fichier</b><small>FNC 228 exemple.pdf · 12 p.</small></div><span class="arr on">⟶</span><div class="node on"><b>ReeMaker</b><small>cartouche · folios 46–57</small></div><span class="arr">⟶</span><div class="node"><b>Annexio</b><small>à faire</small></div><span class="arr">⟶</span><div class="node"><b>Export</b><small>à faire</small></div><span class="sp2"><span class="gear">⚙</span></span></div>
+  <div class="body"><div class="left" style="--lw:240px"><div class="sec" style="margin-top:0">Dossier</div>
+<div class="row2"><div style="flex:2"><div class="lab" style="margin-top:0">Site</div><div class="inp">SITE EXEMPLE</div></div><div style="flex:1.4"><div class="lab" style="margin-top:0">R.E.E.</div><div class="inp">REE 001</div></div><div style="flex:.6"><div class="lab" style="margin-top:0">Ind.</div><div class="inp">A</div></div></div>
+<div class="row2" style="margin-top:2px"><div style="flex:1.2"><div class="lab">Folio départ</div><div class="inp">46 ⇅</div></div><div style="flex:1.3"><div class="lab">Type d'arrêt</div><div class="inp">TEM ⌄</div></div><div style="flex:1"><div class="lab">Cycle</div><div class="inp dis">36 ⇅</div></div></div>
+<div class="sec">Pages</div><div class="row2"><span><span class="rb on"></span>Totalité</span><span style="margin-left:6px"><span class="rb"></span>De</span><span class="inp dis" style="width:24px">1</span>à<span class="inp dis" style="width:24px">12</span></div>
+<div class="sec">Tranche(s)</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px 3px"><span><i class="cb on"></i>0</span><span><i class="cb"></i>1</span><span><i class="cb"></i>2</span><span><i class="cb"></i>3</span><span><i class="cb"></i>4</span><span><i class="cb"></i>5</span><span><i class="cb"></i>6</span><span><i class="cb"></i>7</span><span><i class="cb"></i>8</span><span><i class="cb"></i>9</span></div>
+<div class="row2" style="margin-top:6px">Zoom <span class="inp" style="width:40px">1,2 ⇅</span> <span class="btn blue">Auto</span><span class="btn">0°</span><span class="btn">90°</span></div>
+<div class="btn red big" style="margin-top:7px">▶ Démarrer le foliotage</div></div><div class="prev" style="display:flex;align-items:center;justify-content:center"><div class="sheet" style="width:212px;height:300px;zoom:.62"><div class="bl" style="left:12px;top:12px;width:52px;height:30px;background:#cfd6e2"></div><div class="ln" style="top:58px"></div><div class="ln" style="top:67px;right:30%"></div><div class="ln" style="top:76px"></div><div class="bl" style="left:12px;right:12px;top:100px;height:81px"></div><div class="ln" style="top:210px"></div><div class="ln" style="top:219px;right:40%"></div><div class="cart" style="--fs:8px;--b:1px;position:absolute;right:9px;top:9px"><div class="row"><div class="c g">Site de SITE EXEMPLE 0</div></div><div class="row"><div class="c g">REE 001</div><div class="c">Ind. A</div></div><div class="row"><div class="c g">Folio 48</div><div class="c">TEM</div></div></div></div></div></div>
+  <div class="tl" style="position:relative"><div class="rule"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span></div><div class="trk"><span class="nm">🗂 ReeMaker</span><div class="clips"><div class="clip r">F46</div><div class="clip r">F47</div><div class="clip r">F48</div><div class="clip r">F49</div><div class="clip r">F50</div><div class="clip r">F51</div><div class="clip r">F52</div><div class="clip r">F53</div><div class="clip r">F54</div><div class="clip r">F55</div><div class="clip r">F56</div><div class="clip r">F57</div></div></div><div class="trk"><span class="nm">🔖 Annexio</span><div class="clips"><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div><div class="clip off">—</div></div></div><div class="trk"><span class="nm">📄 Fichier</span><div class="clips"><div class="clip f">p.1</div><div class="clip f">p.2</div><div class="clip f">p.3</div><div class="clip f">p.4</div><div class="clip f">p.5</div><div class="clip f">p.6</div><div class="clip f">p.7</div><div class="clip f">p.8</div><div class="clip f">p.9</div><div class="clip f">p.10</div><div class="clip f">p.11</div><div class="clip f">p.12</div></div></div><div class="head" style="left:calc(62px + (100% - 62px - 18px) * 1.5 / 12 + 9px)"></div></div>
+  <div class="bar"><span class="ok">Foliotage prêt : 12 pages, folios 46 à 57.</span><span class="sp"><span>Page 2/12</span></span></div>
+</div>
+  <div class="tiny">Les autres états de la barre :</div>
+  <div class="strip" style="background:#1b1b1b;zoom:.82"><div class="nodesC"><span class="logo">Annexio</span><div class="node on"><b>Fichier</b><small>FNC 228 exemple.pdf · 12 p.</small></div><span class="arr">⟶</span><div class="node"><b>ReeMaker</b><small>à faire</small></div><span class="arr">⟶</span><div class="node"><b>Annexio</b><small>à faire</small></div><span class="arr">⟶</span><div class="node"><b>Export</b><small>à faire</small></div><span class="sp2"><span class="gear">⚙</span></span></div></div>
+  <div style="height:3px"></div>
+  <div class="strip" style="background:#1b1b1b;zoom:.82"><div class="nodesC"><span class="logo">Annexio</span><div class="node done"><b>Fichier</b><small>FNC 228 exemple.pdf · 12 p.</small></div><span class="arr on">⟶</span><div class="node done"><b>ReeMaker</b><small>cartouche · folios 46–57</small></div><span class="arr on">⟶</span><div class="node done"><b>Annexio</b><small>tampon « Annexe 1 »</small></div><span class="arr on">⟶</span><div class="node on"><b>Export</b><small>PDF final</small></div><span class="sp2"><span class="gear">⚙</span></span></div></div>
+  <div class="pc">
+    <div class="card"><b class="pro">+ Atouts</b><ul style="margin:2px 0"><li>Fidèle à votre schéma ; le résumé de chaque étape est toujours visible</li><li>La timeline montre d'un coup d'œil quelles pages ont quel tampon (clip gris en pointillés = pas encore posé)</li><li>Clic sur un clip = aller à la page ; piste désactivable (œil)</li></ul></div>
+    <div class="card"><b class="con">− Limites</b><ul style="margin:2px 0"><li>Le plus chargé : barre + timeline prennent ≈ 2,5 cm en hauteur</li><li>Plus long à développer (timeline interactive)</li></ul></div>
+  </div>
+  <div class="foot"><span>Annexio · Barre d'étapes — 3 propositions</span><span>5 / 6</span></div>
+</section><section class="page" style="font-size:12.5px">
+  <h2><span class="tag">CHOIX</span>Comparaison et questions</h2>
+  <p class="sub">Vous pouvez aussi mixer (par exemple la barre B avec la timeline de C).</p>
+  <div class="cols">
+    <div style="flex:1.15">
+      <table>
+        <tr><th></th><th>A · Chevrons</th><th>B · Pages à icônes</th><th>C · Nœuds + timeline</th></tr>
+        <tr><td><b>Proche de votre schéma</b></td><td>★★★★☆</td><td>★★★☆☆</td><td>★★★★★</td></tr>
+        <tr><td><b>Effet « logiciel de montage »</b></td><td>★★☆☆☆</td><td>★★★★★</td><td>★★★★☆</td></tr>
+        <tr><td><b>Place laissée à l'aperçu</b></td><td>★★★★★</td><td>★★★★☆</td><td>★★★☆☆</td></tr>
+        <tr><td><b>Lisibilité de l'état d'avancement</b></td><td>★★★★☆</td><td>★★★★☆</td><td>★★★★★</td></tr>
+        <tr><td><b>Effort de développement</b></td><td>faible</td><td>moyen</td><td>élevé</td></tr>
+        <tr><td><b>Version prévue</b></td><td>1.1.18</td><td>1.1.18</td><td>1.1.18 + 1.1.19 (timeline)</td></tr>
+      </table>
+      <div class="note"><b>Mon conseil :</b> <b>B</b> pour la barre (la plus « montage », bouton Exporter toujours visible), avec la <b>timeline de C</b> ajoutée plus tard dans une version dédiée si elle vous manque. <b>A</b> si vous voulez avant tout le plus compact.</div>
+    </div>
+    <div style="flex:.85">
+      <h3>Vos choix</h3>
+      <div class="q"><b>1.</b> Proposition retenue : <b>A</b>, <b>B</b> ou <b>C</b> (ou un mélange à préciser) ?</div>
+      <div class="q"><b>2.</b> <b>Cumul des tampons</b> : ReeMaker puis Annexio sur le même PDF, un seul export — est-ce bien ce que vous voulez ?</div>
+      <div class="q"><b>3.</b> L'étape « Annexio » : garder ce nom (identique à l'application) ou la renommer « Annexe » ?</div>
+      <div class="q"><b>4.</b> <b>Paramètres</b> : l'engrenage ⚙ à droite de la barre vous convient-il ?</div>
+      <div class="q"><b>5.</b> Les étapes ReeMaker et Annexio peuvent-elles être <b>ignorées</b> ?</div>
+      <div class="note">Les questions sur le cartouche (tranches, cycle, tampons personnalisés, validation) restent celles de la page 11 du PDF précédent.</div>
+    </div>
+  </div>
+  <h3 style="margin-top:12px">Les 3 barres côte à côte (étape ReeMaker active)</h3>
+  <div class="tiny">A · Chevrons</div><div class="strip" style="background:#1b1b1b"><div class="stepsA"><span class="logo">Annexio</span><div class="chev done"><i>✓</i><div><b>Fichier</b><small>FNC 228 · 12 p.</small></div></div><div class="chev on"><i>2</i><div><b>ReeMaker</b><small>folios 46–57</small></div></div><div class="chev"><i>3</i><div><b>Annexio</b></div></div><div class="chev"><i>4</i><div><b>Export</b></div></div><span class="sp2"><span class="btn">Récents ⌄</span><span class="gear">⚙</span></span></div>
+  </div>
+  <div class="tiny">B · Pages à icônes</div><div class="strip" style="background:#1b1b1b;zoom:.9"><div class="pagesB"><div class="proj">Annexio<b>FNC 228 exemple.pdf</b></div><div class="pgs"><div class="pg done"><span class="ic">📄</span>Fichier<small>✓ FNC 228</small></div><div class="pg on"><span class="ic">🗂</span>ReeMaker<small>12 pages</small></div><div class="pg"><span class="ic">🔖</span>Annexio<small>&nbsp;</small></div><div class="pg"><span class="ic">📤</span>Export<small>&nbsp;</small></div></div><div class="sp2" style="min-width:150px;justify-content:flex-end"><span class="gear">⚙</span><span class="btn red">Exporter…</span></div></div><div class="rail"><i style="width:38%"></i></div>
+  </div>
+  <div class="tiny">C · Nœuds et flèches</div><div class="strip" style="background:#1b1b1b"><div class="nodesC"><span class="logo">Annexio</span><div class="node done"><b>Fichier</b><small>FNC 228 exemple.pdf · 12 p.</small></div><span class="arr on">⟶</span><div class="node on"><b>ReeMaker</b><small>cartouche · folios 46–57</small></div><span class="arr">⟶</span><div class="node"><b>Annexio</b><small>à faire</small></div><span class="arr">⟶</span><div class="node"><b>Export</b><small>à faire</small></div><span class="sp2"><span class="gear">⚙</span></span></div>
+  </div>
+  <div class="foot"><span>Annexio · Barre d'étapes — 3 propositions</span><span>6 / 6</span></div>
+</section></body></html>

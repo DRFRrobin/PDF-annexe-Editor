@@ -2,6 +2,13 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.18
+- **Version web** : nouvelle interface en 4 étapes à chevrons (Fichier → ReeMaker → Annexio → Export), façon logiciel de montage (proposition A). Aperçu commun avec miniatures, zoom (Ctrl+molette) et calques visibles ; thème Système / Clair / Sombre ; réglages mémorisés.
+- Nouvelle étape **ReeMaker** : cartouche à 3 lignes (site + tranche, REE + indice, folio + type d'arrêt), foliotage page par page (clic = placer, Entrée / clic droit = valider, Passer, Précédente, garder la position), folios continus, zoom, orientation 0/90/180/270° ou **automatique** (sens de lecture du texte de la page), pages pivotées gérées.
+- L'étape **Annexio** reprend le tampon « Annexe X Folio n/N » existant (modèle, folio, total, taille, pages, positions rapides). L'export cumule les deux tampons dans un seul PDF.
+- Code de dessin isolé dans `stamps.js`, avec tests (`node tests/stamps.test.js`).
+- Hypothèses par défaut (à confirmer) : plusieurs tranches cochées → « 1, 2 » (ou « 1-4 » si consécutives) ; le cycle n'apparaît dans le cartouche que si la case est cochée ; clic droit ou Entrée valident ; un folio par page foliotée (les pages passées ne consomment pas de numéro). Non repris pour l'instant : tampons personnalisés. La version Rust n'est pas encore modifiée.
+
 ## 1.1.17
 - Application Rust : mise à jour automatique. Au démarrage, Annexio vérifie en arrière-plan s'il existe une release plus récente ; un bandeau propose « Mettre à jour » (ou « Plus tard »). Le fichier est téléchargé, contrôlé (taille + empreinte SHA-256 fournie par GitHub), puis remplace l'exécutable (l'ancien devient `.old`, supprimé au lancement suivant). Bouton « Redémarrer maintenant ». Désactivable dans Paramètres → Application, avec bouton « Rechercher une mise à jour ». Disponible à partir de cette version : les versions précédentes doivent être remplacées à la main une fois.
 
