@@ -1,16 +1,22 @@
 //! Interface graphique : aperçu du PDF, rectangle rouge déplaçable, génération. 100 % local.
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
+mod preview;
 mod settings;
+mod steps;
 mod update;
+mod workflow;
 
 use eframe::egui::{self, Align, Color32, FontId, Key, Layout, Modifiers, Pos2, Rect, RichText, Sense, Stroke, Vec2};
 use hayro::hayro_interpret::InterpreterSettings;
 use hayro::hayro_syntax::Pdf;
 use hayro::vello_cpu::color::palette::css::WHITE;
 use hayro::{PixmapSettings, RenderCache, RenderSettings};
-use annexio::{box_size, parse_range, render_text, stamp, Options};
+use annexio::reemaker::{Placement, Rm};
+use annexio::{box_size, parse_range, render_text, Options};
 use settings::Settings;
+use workflow::{Run, Step};
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
@@ -121,13 +127,8 @@ fn open_in_os(path: &Path, select: bool) {
     }
 }
 
-// ───────────────────────────── état ─────────────────────────────
 
-#[derive(Clone, Copy, PartialEq)]
-enum Tab {
-    File,
-    Settings,
-}
+// ───────────────────────────── état ─────────────────────────────
 
 #[derive(Clone, Copy, PartialEq)]
 enum Zoom {
@@ -168,9 +169,14 @@ struct Status {
 
 struct App {
     ctx: egui::Context,
-    tab: Tab,
+    step: Step,
+    seen: [bool; 4],
+    visited: [bool; 4],
+    exported: bool,
+    settings_open: bool,
     // document
     bytes: Option<Vec<u8>>,
+    rm_doc: Option<lopdf::Document>,
     name: String,
     path: Option<PathBuf>,
     n_pages: usize,
@@ -180,12 +186,34 @@ struct App {
     thumbs: Vec<Option<(egui::TextureHandle, f32)>>, // (texture, largeur/hauteur)
     thumb_rx: Option<Receiver<(usize, egui::ColorImage)>>,
     scroll_thumb: bool,
-    // tampon
+    // étape ReeMaker
+    rm: Rm,
+    rm_apply: bool,
+    rm_start_s: String,
+    rm_all: bool,
+    rm_from: usize,
+    rm_to: usize,
+    rm_tr: [bool; 10],
+    rm_orient: Option<u16>,
+    place: BTreeMap<usize, Placement>,
+    skipped: std::collections::BTreeSet<usize>,
+    rm_done: bool,
+    last_pl: Option<Placement>,
+    run: Option<Run>,
+    orient_cache: HashMap<usize, u16>,
+    keep_pos: bool,
+    base_size: f32,
+    // étape Annexio (tampon sur une ligne)
+    an_apply: bool,
     opts: Options,
     start_s: String,
     total_s: String,
     size_s: String,
     margin: f32,
+    // export
+    name_tpl: String,
+    out_name: String,
+    out_manual: bool,
     // affichage
     zoom: Zoom,
     k: f32,
@@ -198,7 +226,7 @@ struct App {
     theme: u8,
     applied_theme: Option<u8>,
     ui_scale: f32,
-    // historique
+    // historique (étape Annexio)
     undo: Vec<Snap>,
     redo: Vec<Snap>,
     last_snap: Snap,
@@ -223,10 +251,28 @@ impl App {
         opts.white_fill = s.white_fill;
         opts.fx = s.fx;
         opts.fy = s.fy;
+        let mut rm = Rm::default();
+        rm.site = s.rm_site.clone();
+        rm.ree = s.rm_ree.clone();
+        rm.indice = s.rm_indice.clone();
+        rm.arret = s.rm_arret.clone();
+        rm.cycle = s.rm_cycle.clone();
+        rm.show_cycle = s.rm_show_cycle;
+        rm.zoom = s.rm_zoom;
+        rm.base_size = s.base_size;
+        let mut rm_tr = [false; 10];
+        for t in s.rm_tranches.split(',').filter_map(|x| x.trim().parse::<usize>().ok()).filter(|t| *t < 10) {
+            rm_tr[t] = true;
+        }
         let mut app = App {
             ctx,
-            tab: Tab::File,
+            step: Step::File,
+            seen: [true, false, false, false],
+            visited: [true, false, false, false],
+            exported: false,
+            settings_open: false,
             bytes: None,
+            rm_doc: None,
             name: String::new(),
             path: None,
             n_pages: 0,
@@ -236,11 +282,31 @@ impl App {
             thumbs: Vec::new(),
             thumb_rx: None,
             scroll_thumb: false,
+            rm,
+            rm_apply: true,
+            rm_start_s: s.rm_start.clone(),
+            rm_all: true,
+            rm_from: 1,
+            rm_to: 1,
+            rm_tr,
+            rm_orient: s.rm_orient.parse::<u16>().ok().filter(|o| [0, 90, 180, 270].contains(o)),
+            place: BTreeMap::new(),
+            skipped: Default::default(),
+            rm_done: false,
+            last_pl: None,
+            run: None,
+            orient_cache: HashMap::new(),
+            keep_pos: s.keep_pos,
+            base_size: s.base_size,
+            an_apply: true,
             opts,
             start_s: s.start.clone(),
             total_s: s.total.clone(),
             size_s: s.size.clone(),
             margin: s.margin,
+            name_tpl: s.name_tpl.clone(),
+            out_name: String::new(),
+            out_manual: false,
             zoom: Zoom::FitPage,
             k: BASE_K,
             zoom_at: -10.0,
@@ -267,6 +333,7 @@ impl App {
             last_save_check: 0.0,
         };
         app.sync_opts();
+        app.rm_sync();
         app.last_snap = app.snap();
         app.say("Ouvrez un PDF (Ctrl+O, bouton ou glisser-déposer).", false);
         if app.auto_update {
@@ -295,6 +362,19 @@ impl App {
             ui_scale: self.ui_scale,
             thumbs: self.show_thumbs,
             auto_update: self.auto_update,
+            rm_site: self.rm.site.clone(),
+            rm_ree: self.rm.ree.clone(),
+            rm_indice: self.rm.indice.clone(),
+            rm_start: self.rm_start_s.clone(),
+            rm_arret: self.rm.arret.clone(),
+            rm_cycle: self.rm.cycle.clone(),
+            rm_show_cycle: self.rm.show_cycle,
+            rm_tranches: (0..10).filter(|t| self.rm_tr[*t]).map(|t| t.to_string()).collect::<Vec<_>>().join(","),
+            rm_zoom: self.rm.zoom,
+            rm_orient: self.rm_orient.map_or("auto".to_string(), |o| o.to_string()),
+            base_size: self.base_size,
+            keep_pos: self.keep_pos,
+            name_tpl: self.name_tpl.clone(),
             recents: self.recents.clone(),
         }
     }
@@ -306,6 +386,8 @@ impl App {
             self.saved_text = text;
         }
     }
+
+    // ── mise à jour ──
 
     // ── mise à jour ──
 
@@ -423,6 +505,22 @@ impl App {
         }
     }
 
+    /// Remet à zéro tout ce qui dépend du document (foliotage, positions, nom d'export).
+    fn reset_document(&mut self) {
+        self.place.clear();
+        self.skipped.clear();
+        self.rm_done = false;
+        self.last_pl = None;
+        self.run = None;
+        self.orient_cache.clear();
+        self.exported = false;
+        self.out_manual = false;
+        self.out_name.clear();
+        self.visited = [true, false, false, false];
+        self.seen = [true, false, false, false];
+        self.step = Step::File;
+    }
+
     fn open(&mut self, path: PathBuf) {
         let bytes = match std::fs::read(&path) {
             Ok(b) => b,
@@ -434,6 +532,7 @@ impl App {
         match load_page(&bytes, 0, self.want_scale()) {
             Err(e) => self.say(e, true),
             Ok((page, n)) => {
+                self.reset_document();
                 self.name = path.file_name().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
                 let p = path.to_string_lossy().into_owned();
                 self.recents.retain(|r| *r != p);
@@ -441,9 +540,12 @@ impl App {
                 self.recents.truncate(8);
                 self.thumb_rx = Some(spawn_thumbs(bytes.clone(), self.ctx.clone()));
                 self.thumbs = (0..n).map(|_| None).collect();
+                self.rm_doc = lopdf::Document::load_mem(&bytes).ok();
                 self.path = Some(path);
                 self.bytes = Some(bytes);
                 self.n_pages = n;
+                self.rm_from = 1;
+                self.rm_to = n;
                 self.cur = 0;
                 self.page = Some(page);
                 self.tex = None;
@@ -454,7 +556,12 @@ impl App {
     }
 
     fn close(&mut self) {
+        if !self.exported && (self.rm_done || !self.place.is_empty()) && self.run.is_none() {
+            self.say("Foliotage non exporté fermé.", false);
+        }
+        self.reset_document();
         self.bytes = None;
+        self.rm_doc = None;
         self.page = None;
         self.tex = None;
         self.thumbs.clear();
@@ -488,31 +595,6 @@ impl App {
         if let Ok((page, _)) = load_page(bytes, self.cur, scale) {
             self.page = Some(page);
             self.tex = None;
-        }
-    }
-
-    fn generate(&mut self) {
-        let Some(bytes) = &self.bytes else { return };
-        let stem = self.name.trim_end_matches(".pdf").trim_end_matches(".PDF");
-        let mut dlg = rfd::FileDialog::new().add_filter("PDF", &["pdf"]).set_file_name(format!("{stem}_annexe.pdf"));
-        if let Some(dir) = self.path.as_ref().and_then(|p| p.parent()) {
-            dlg = dlg.set_directory(dir);
-        }
-        let Some(out) = dlg.save_file() else { return };
-        if self.path.as_deref() == Some(out.as_path()) {
-            return self.say("Choisissez un autre nom : le fichier d'origine ne doit pas être remplacé.", true);
-        }
-        match stamp(bytes, &self.opts) {
-            Err(e) => self.say(e, true),
-            Ok((data, n)) => match std::fs::write(&out, data) {
-                Ok(()) => {
-                    self.status = Status { text: format!("✔ {n} page(s) tamponnée(s) : {}", out.display()), err: false, out: Some(out) };
-                }
-                Err(e) => self.say(
-                    format!("Impossible d'écrire « {} » ({e}). Le fichier est peut-être ouvert dans un autre programme.", out.display()),
-                    true,
-                ),
-            },
         }
     }
 
@@ -577,32 +659,8 @@ impl App {
         self.total_s.clear();
         self.size_s = self.opts.font_size.to_string();
     }
-
-    // ── position du tampon ──
-
     fn stamp_text(&self) -> String {
         render_text(&self.opts, self.cur as u32 + 1, self.n_pages.max(1) as u32)
-    }
-
-    /// h, v ∈ {0, 0.5, 1} : gauche/centre/droite, haut/milieu/bas (avec la marge).
-    fn place(&mut self, h: f32, v: f32) {
-        let Some(page) = &self.page else { return };
-        let (pw, ph) = page.pts;
-        let (bw, bh) = box_size(&self.stamp_text(), self.opts.font_size);
-        let pos = |f: f32, page: f32, b: f32, m: f32| match f {
-            x if x <= 0.0 => m,
-            x if x >= 1.0 => page - b - m,
-            _ => (page - b) / 2.0,
-        };
-        self.opts.fx = (pos(h, pw, bw, self.margin) / pw).clamp(0.0, 1.0);
-        self.opts.fy = (pos(v, ph, bh, self.margin) / ph).clamp(0.0, 1.0);
-    }
-
-    fn nudge(&mut self, dx: f32, dy: f32) {
-        let Some(page) = &self.page else { return };
-        let (pw, ph) = page.pts;
-        self.opts.fx = (self.opts.fx + dx / pw).clamp(0.0, 1.0);
-        self.opts.fy = (self.opts.fy + dy / ph).clamp(0.0, 1.0);
     }
 
     // ── clavier ──
@@ -610,65 +668,98 @@ impl App {
     fn handle_keys(&mut self, ctx: &egui::Context) {
         let typing = ctx.egui_wants_keyboard_input();
         let has_doc = self.bytes.is_some();
-        let mut act = (false, false, false, false, false, false); // open, save, close, undo, redo, esc
+        let running = self.run.is_some();
+        let (mut open, mut save, mut close, mut undo, mut redo, mut esc, mut enter) = (false, false, false, false, false, false, false);
+        let mut step: Option<Step> = None;
+        let mut settings_toggle = false;
         let mut nav = 0i32; // pages
         let mut jump: Option<usize> = None;
         let mut mv = (0.0f32, 0.0f32);
         ctx.input_mut(|i| {
-            act.0 = i.consume_key(Modifiers::COMMAND, Key::O);
-            act.1 = i.consume_key(Modifiers::COMMAND, Key::S);
-            act.2 = i.consume_key(Modifiers::COMMAND, Key::W);
-            act.5 = i.key_pressed(Key::Escape);
+            open = i.consume_key(Modifiers::COMMAND, Key::O);
+            save = i.consume_key(Modifiers::COMMAND, Key::S);
+            close = i.consume_key(Modifiers::COMMAND, Key::W);
+            esc = i.key_pressed(Key::Escape);
+            for (k, s) in [(Key::Num1, Step::File), (Key::Num2, Step::Rm), (Key::Num3, Step::Annexe), (Key::Num4, Step::Export)] {
+                if i.consume_key(Modifiers::ALT, k) {
+                    step = Some(s);
+                }
+            }
+            if i.consume_key(Modifiers::ALT, Key::Comma) {
+                settings_toggle = true;
+            }
             if !typing {
-                act.4 = i.consume_key(Modifiers::COMMAND, Key::Y) || i.consume_key(Modifiers::COMMAND | Modifiers::SHIFT, Key::Z);
-                act.3 = i.consume_key(Modifiers::COMMAND, Key::Z);
+                enter = running && i.consume_key(Modifiers::NONE, Key::Enter);
+                redo = i.consume_key(Modifiers::COMMAND, Key::Y) || i.consume_key(Modifiers::COMMAND | Modifiers::SHIFT, Key::Z);
+                undo = i.consume_key(Modifiers::COMMAND, Key::Z);
                 if has_doc {
-                    nav += i.consume_key(Modifiers::NONE, Key::PageDown) as i32;
-                    nav -= i.consume_key(Modifiers::NONE, Key::PageUp) as i32;
-                    if i.consume_key(Modifiers::NONE, Key::Home) {
-                        jump = Some(0);
-                    }
-                    if i.consume_key(Modifiers::NONE, Key::End) {
-                        jump = Some(usize::MAX);
+                    if !running {
+                        nav += i.consume_key(Modifiers::NONE, Key::PageDown) as i32;
+                        nav -= i.consume_key(Modifiers::NONE, Key::PageUp) as i32;
+                        if i.consume_key(Modifiers::NONE, Key::Home) {
+                            jump = Some(0);
+                        }
+                        if i.consume_key(Modifiers::NONE, Key::End) {
+                            jump = Some(usize::MAX);
+                        }
                     }
                     for (key, dx, dy) in [(Key::ArrowLeft, -1.0, 0.0), (Key::ArrowRight, 1.0, 0.0), (Key::ArrowUp, 0.0, -1.0), (Key::ArrowDown, 0.0, 1.0)] {
-                        for (m, step) in [(Modifiers::SHIFT, 10.0), (Modifiers::NONE, 1.0)] {  // Maj d'abord : « NONE » accepte aussi Maj
+                        for (m, st) in [(Modifiers::SHIFT, 10.0), (Modifiers::NONE, 1.0)] {  // Maj d'abord : « NONE » accepte aussi Maj
                             if i.consume_key(m, key) {
-                                mv.0 += dx * step;
-                                mv.1 += dy * step;
+                                mv.0 += dx * st;
+                                mv.1 += dy * st;
                             }
                         }
                     }
                 }
             }
         });
-        if act.0 {
+        if open {
             self.pick_and_open();
         }
-        if act.1 && has_doc {
-            self.generate();
+        if let Some(s) = step {
+            self.set_step(s);
         }
-        if act.2 && has_doc {
+        if settings_toggle {
+            self.settings_open = !self.settings_open;
+        }
+        if save && has_doc {
+            if self.step == Step::Export {
+                self.export();
+            } else {
+                self.set_step(Step::Export);
+            }
+        }
+        if close && has_doc {
             self.close();
         }
-        if act.3 {
+        if undo && self.step == Step::Annexe {
             self.undo();
         }
-        if act.4 {
+        if redo && self.step == Step::Annexe {
             self.redo();
         }
-        if act.5 {
-            ctx.memory_mut(|m| {
-                if let Some(id) = m.focused() {
-                    m.surrender_focus(id);
-                }
-            });
+        if esc {
+            if typing {
+                ctx.memory_mut(|m| {
+                    if let Some(id) = m.focused() {
+                        m.surrender_focus(id);
+                    }
+                });
+            } else if running {
+                self.cancel_run();
+            } else if self.settings_open {
+                self.settings_open = false;
+            }
+        }
+        if enter {
+            self.validate_run();
         }
         if mv != (0.0, 0.0) {
-            self.nudge(mv.0, mv.1);
+            self.nudge_live(mv.0, mv.1);
         }
         if let Some(j) = jump {
-            self.goto(j.min(self.n_pages.saturating_sub(1)));
+            self.goto_page(j.min(self.n_pages.saturating_sub(1)));
         }
         if nav != 0 {
             self.step_page(nav);
@@ -676,7 +767,7 @@ impl App {
     }
 
     fn step_page(&mut self, step: i32) {
-        if self.n_pages == 0 {
+        if self.n_pages == 0 || self.run.is_some() {
             return;
         }
         let target = (self.cur as i32 + step.signum()).clamp(0, self.n_pages as i32 - 1) as usize;
@@ -685,10 +776,10 @@ impl App {
         }
     }
 
-    /// Molette sur l'aperçu : change de page (sauf si la page est agrandie et défile).
+    /// Molette sur l'aperçu : change de page (sauf si la page est agrandie et défile, ou pendant le foliotage).
     fn wheel_pages(&mut self, ctx: &egui::Context) {
         let over = ctx.pointer_hover_pos().is_some_and(|p| self.preview_rect.contains(p));
-        if self.bytes.is_none() || !over || self.scrollable {
+        if self.bytes.is_none() || !over || self.scrollable || self.run.is_some() {
             self.wheel = 0.0;
             return;
         }
@@ -700,19 +791,7 @@ impl App {
         }
     }
 
-    // ── interface ──
-
-    fn tabs_bar(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
-            ui.heading("Annexio");
-            ui.add_space(16.0);
-            ui.selectable_value(&mut self.tab, Tab::File, "📄 Fichier");
-            ui.selectable_value(&mut self.tab, Tab::Settings, "⚙ Paramètres");
-            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                ui.small(format!("v{}", update::current_version()));
-            });
-        });
-    }
+    // ── barre du bas ──
 
     fn bottom_bar(&mut self, ui: &mut egui::Ui) {
         ui.add_space(4.0);
@@ -731,13 +810,36 @@ impl App {
                 ui.add(egui::Label::new(msg).wrap_mode(egui::TextWrapMode::Truncate));
             }
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                let go = egui::Button::new(RichText::new("Générer le PDF…").color(Color32::WHITE).strong()).fill(RED);
-                if ui
-                    .add_enabled(self.bytes.is_some(), go)
-                    .on_hover_text("Ajoute le tampon et enregistre un nouveau PDF (Ctrl+S)")
-                    .clicked()
-                {
-                    self.generate();
+                let (label, enabled): (&str, bool) = match self.step {
+                    Step::File => ("Suivant : ReeMaker ▸", self.bytes.is_some()),
+                    Step::Rm => {
+                        if self.run.is_some() {
+                            ("✔ Valider et page suivante", true)
+                        } else if !self.rm_apply || self.rm_done {
+                            ("Suivant : Annexio ▸", true)
+                        } else {
+                            ("▶ Démarrer le foliotage", self.bytes.is_some())
+                        }
+                    }
+                    Step::Annexe => ("Suivant : Export ▸", true),
+                    Step::Export => ("📤 Exporter le PDF…", self.can_export()),
+                };
+                let go = egui::Button::new(RichText::new(label).color(Color32::WHITE).strong()).fill(RED);
+                if ui.add_enabled(enabled, go).clicked() {
+                    match self.step {
+                        Step::File => self.set_step(Step::Rm),
+                        Step::Rm => {
+                            if self.run.is_some() {
+                                self.validate_run();
+                            } else if !self.rm_apply || self.rm_done {
+                                self.set_step(Step::Annexe);
+                            } else {
+                                self.start_run();
+                            }
+                        }
+                        Step::Annexe => self.set_step(Step::Export),
+                        Step::Export => self.export(),
+                    }
                 }
                 if self.bytes.is_some() {
                     ui.label(format!("Page {}/{}", self.cur + 1, self.n_pages));
@@ -745,386 +847,6 @@ impl App {
             });
         });
         ui.add_space(4.0);
-    }
-
-    fn side_panel(&mut self, ui: &mut egui::Ui) {
-        self.sync_opts();
-        egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| match self.tab {
-            Tab::File => self.file_tab(ui),
-            Tab::Settings => self.settings_tab(ui),
-        });
-    }
-
-    fn file_tab(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(4.0);
-        let open = egui::Button::new("📂 Ouvrir un PDF…");
-        if ui.add_sized([ui.available_width(), 34.0], open).on_hover_text("Ctrl+O").clicked() {
-            self.pick_and_open();
-        }
-        ui.small("ou glissez un PDF dans la fenêtre");
-        if self.bytes.is_some() {
-            ui.separator();
-            ui.label(RichText::new(&self.name).strong());
-            ui.label(format!("{} page(s)", self.n_pages));
-            ui.horizontal(|ui| {
-                if ui.add_enabled(self.cur > 0, egui::Button::new("‹")).on_hover_text("Page précédente (Page préc.)").clicked() {
-                    self.step_page(-1);
-                }
-                ui.label(format!("Page {}/{}", self.cur + 1, self.n_pages));
-                if ui.add_enabled(self.cur + 1 < self.n_pages, egui::Button::new("›")).on_hover_text("Page suivante (Page suiv.)").clicked() {
-                    self.step_page(1);
-                }
-            });
-            if ui.button("Fermer le PDF").on_hover_text("Ctrl+W").clicked() {
-                self.close();
-            }
-        }
-        if !self.recents.is_empty() {
-            ui.separator();
-            ui.label(RichText::new("Fichiers récents").strong());
-            let mut to_open = None;
-            for r in &self.recents {
-                let name = Path::new(r).file_name().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| r.clone());
-                if ui.link(name).on_hover_text(r).clicked() {
-                    to_open = Some(PathBuf::from(r));
-                }
-            }
-            if let Some(p) = to_open {
-                self.open(p);
-            }
-            if ui.small_button("Effacer la liste").clicked() {
-                self.recents.clear();
-            }
-        }
-        ui.separator();
-        ui.small("Glissez le rectangle rouge, ou cliquez sur la page pour le placer. Flèches : ajuster d'1 pt (Maj : 10 pt).");
-    }
-
-    fn settings_tab(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(4.0);
-        ui.label(RichText::new("Tampon").strong());
-        egui::Grid::new("opts").num_columns(2).spacing([8.0, 8.0]).show(ui, |ui| {
-            ui.label("Annexe (X)");
-            ui.text_edit_singleline(&mut self.opts.annexe).on_hover_text("Remplace {annexe} dans le texte");
-            ui.end_row();
-            ui.label("Texte");
-            ui.text_edit_singleline(&mut self.opts.template)
-                .on_hover_text("{annexe} = annexe, {n} = numéro de folio, {total} = nombre total");
-            ui.end_row();
-            ui.label("Modèles");
-            egui::ComboBox::from_id_salt("tpl").width(ui.available_width()).selected_text("Choisir…").show_ui(ui, |ui| {
-                for t in TEMPLATES {
-                    if ui.selectable_label(self.opts.template == t, t).clicked() {
-                        self.opts.template = t.to_string();
-                    }
-                }
-            });
-            ui.end_row();
-            ui.label("Premier folio");
-            ui.text_edit_singleline(&mut self.start_s).on_hover_text("Numéro du folio de la première page");
-            ui.end_row();
-            ui.label("Total (N)");
-            ui.add(egui::TextEdit::singleline(&mut self.total_s).hint_text("auto"))
-                .on_hover_text("Vide = nombre de pages du PDF");
-            ui.end_row();
-            ui.label("Taille (pt)");
-            ui.text_edit_singleline(&mut self.size_s).on_hover_text("Taille du texte, de 6 à 72 points");
-            ui.end_row();
-            ui.label("Pages");
-            ui.add(egui::TextEdit::singleline(&mut self.opts.pages).hint_text("toutes (ex : 1-3,5)"))
-                .on_hover_text("Pages à tamponner. Vide = toutes. Exemple : 1-3,5");
-            ui.end_row();
-        });
-        ui.horizontal_wrapped(|ui| {
-            let n = self.n_pages as u32;
-            if ui.small_button("Toutes").clicked() {
-                self.opts.pages.clear();
-            }
-            if ui.small_button("Paires").clicked() {
-                self.opts.pages = (2..=n).step_by(2).map(|p| p.to_string()).collect::<Vec<_>>().join(",");
-            }
-            if ui.small_button("Impaires").clicked() {
-                self.opts.pages = (1..=n).step_by(2).map(|p| p.to_string()).collect::<Vec<_>>().join(",");
-            }
-            if ui.small_button("Page courante").clicked() && n > 0 {
-                self.opts.pages = (self.cur + 1).to_string();
-            }
-        });
-        ui.checkbox(&mut self.opts.white_fill, "Fond blanc");
-        ui.horizontal(|ui| {
-            if ui.button("Réinitialiser").clicked() {
-                self.reset_opts();
-            }
-            if ui.add_enabled(!self.undo.is_empty(), egui::Button::new("↶ Annuler")).on_hover_text("Ctrl+Z").clicked() {
-                self.undo();
-            }
-            if ui.add_enabled(!self.redo.is_empty(), egui::Button::new("↷ Rétablir")).on_hover_text("Ctrl+Y").clicked() {
-                self.redo();
-            }
-        });
-
-        ui.separator();
-        ui.label(RichText::new("Position").strong());
-        ui.horizontal(|ui| {
-            ui.label("Marge");
-            ui.add(egui::DragValue::new(&mut self.margin).range(0.0..=200.0).suffix(" pt"));
-        });
-        let presets: [(&str, f32, f32); 7] = [
-            ("Haut gauche", 0.0, 0.0),
-            ("Haut centre", 0.5, 0.0),
-            ("Haut droite", 1.0, 0.0),
-            ("Centre", 0.5, 0.5),
-            ("Bas gauche", 0.0, 1.0),
-            ("Bas centre", 0.5, 1.0),
-            ("Bas droite", 1.0, 1.0),
-        ];
-        ui.horizontal_wrapped(|ui| {
-            for (label, h, v) in presets {
-                if ui.add_enabled(self.page.is_some(), egui::Button::new(label)).clicked() {
-                    self.place(h, v);
-                }
-            }
-        });
-
-        ui.separator();
-        ui.label(RichText::new("Apparence").strong());
-        ui.horizontal(|ui| {
-            ui.selectable_value(&mut self.theme, 0, "Système");
-            ui.selectable_value(&mut self.theme, 1, "Clair");
-            ui.selectable_value(&mut self.theme, 2, "Sombre");
-        });
-        ui.horizontal(|ui| {
-            ui.label("Taille de l'interface");
-        });
-        let mut pct = (self.ui_scale * 100.0).round();
-        if ui.add(egui::Slider::new(&mut pct, 80.0..=200.0).suffix(" %")).on_hover_text("Ctrl + / Ctrl - fonctionnent aussi").changed() {
-            self.ui_scale = pct / 100.0;
-            ui.ctx().set_zoom_factor(self.ui_scale);
-        }
-        if ui.small_button("100 %").clicked() {
-            self.ui_scale = 1.0;
-            ui.ctx().set_zoom_factor(1.0);
-        }
-        ui.checkbox(&mut self.show_thumbs, "Afficher les miniatures des pages");
-
-        ui.separator();
-        egui::CollapsingHeader::new("Raccourcis clavier").show(ui, |ui| {
-            for (k, d) in [
-                ("Ctrl+O", "Ouvrir un PDF"),
-                ("Ctrl+S", "Générer le PDF"),
-                ("Ctrl+W", "Fermer le PDF"),
-                ("Ctrl+Z / Ctrl+Y", "Annuler / rétablir"),
-                ("Molette", "Changer de page"),
-                ("Ctrl+molette", "Zoom de l'aperçu"),
-                ("Page préc. / suiv.", "Changer de page"),
-                ("Début / Fin", "Première / dernière page"),
-                ("Flèches", "Déplacer le tampon (Maj : ×10)"),
-                ("Échap", "Quitter un champ de saisie"),
-            ] {
-                ui.horizontal(|ui| {
-                    ui.label(RichText::new(k).strong());
-                    ui.label(d);
-                });
-            }
-        });
-        ui.separator();
-        ui.label(RichText::new("Application").strong());
-        ui.label(format!("Version {}", update::current_version()));
-        ui.checkbox(&mut self.auto_update, "Vérifier les mises à jour au démarrage")
-            .on_hover_text("Contacte github.com pour savoir si une nouvelle version existe. Aucun de vos fichiers n'est envoyé.");
-        match &self.upd {
-            Upd::Checking => {
-                ui.horizontal(|ui| {
-                    ui.spinner();
-                    ui.label("Recherche en cours…");
-                });
-            }
-            Upd::UpToDate => {
-                ui.colored_label(GREEN, "✔ Vous avez la dernière version.");
-            }
-            Upd::Available(rel) => {
-                ui.colored_label(RED, format!("Version {} disponible.", rel.version));
-            }
-            _ => {}
-        }
-        if let Some(e) = &self.upd_error {
-            ui.colored_label(RED, e);
-        }
-        let busy = matches!(self.upd, Upd::Checking | Upd::Installing);
-        if ui.add_enabled(!busy, egui::Button::new("🔄 Rechercher une mise à jour")).clicked() {
-            self.start_check();
-        }
-        ui.small("Tout reste sur votre ordinateur, sauf cette vérification si elle est activée.");
-    }
-
-    fn thumbs_panel(&mut self, ui: &mut egui::Ui) {
-        // reçoit les miniatures rendues en arrière-plan
-        if let Some(rx) = &self.thumb_rx {
-            while let Ok((i, img)) = rx.try_recv() {
-                let aspect = img.size[0] as f32 / img.size[1].max(1) as f32;
-                if let Some(slot) = self.thumbs.get_mut(i) {
-                    *slot = Some((ui.ctx().load_texture(format!("th{i}"), img, Default::default()), aspect));
-                }
-            }
-        }
-        let stamped = parse_range(&self.opts.pages, self.n_pages as u32).unwrap_or_default();
-        let mut goto = None;
-        let mut scrolled = false;
-        egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-            ui.add_space(4.0);
-            for i in 0..self.n_pages {
-                let (aspect, tex) = match self.thumbs.get(i).and_then(|t| t.as_ref()) {
-                    Some((t, a)) => (*a, Some(t.id())),
-                    None => (0.7, None),
-                };
-                let size = Vec2::new(THUMB_W, THUMB_W / aspect);
-                let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
-                let painter = ui.painter();
-                match tex {
-                    Some(id) => {
-                        painter.image(id, rect, Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)), Color32::WHITE);
-                    }
-                    None => {
-                        painter.rect_filled(rect, 2.0, ui.visuals().faint_bg_color);
-                        painter.text(rect.center(), egui::Align2::CENTER_CENTER, "…", FontId::proportional(16.0), ui.visuals().text_color());
-                    }
-                }
-                let current = i == self.cur;
-                let stroke = if current { Stroke::new(3.0, RED) } else if resp.hovered() { Stroke::new(2.0, Color32::GRAY) } else { Stroke::new(1.0, Color32::from_gray(110)) };
-                painter.rect_stroke(rect, 2.0, stroke, egui::StrokeKind::Outside);
-                if stamped.contains(&(i as u32 + 1)) {
-                    painter.circle_filled(rect.right_top() + Vec2::new(-9.0, 9.0), 5.0, RED);
-                }
-                ui.vertical_centered(|ui| ui.small(format!("{}", i + 1)));
-                if resp.on_hover_text(format!("Page {}", i + 1)).clicked() {
-                    goto = Some(i);
-                }
-                if current && self.scroll_thumb {
-                    ui.scroll_to_rect(rect, Some(Align::Center));
-                    scrolled = true;
-                }
-                ui.add_space(4.0);
-            }
-        });
-        if scrolled {
-            self.scroll_thumb = false;
-        }
-        if let Some(i) = goto {
-            self.goto(i);
-        }
-    }
-
-    fn zoom_by(&mut self, f: f32) {
-        self.zoom = Zoom::Custom((self.k * f).clamp(0.1, 6.0));
-        self.zoom_at = self.ctx.input(|i| i.time);
-    }
-
-    fn preview(&mut self, ui: &mut egui::Ui) {
-        self.preview_rect = ui.max_rect();
-        let Some((pw, ph)) = self.page.as_ref().map(|p| p.pts) else {
-            ui.centered_and_justified(|ui| {
-                ui.label("Aucun PDF chargé. Ctrl+O pour en ouvrir un, ou glissez-le ici.");
-            });
-            return;
-        };
-        let now = ui.ctx().input(|i| i.time);
-
-        // barre de zoom
-        ui.horizontal(|ui| {
-            if ui.button("−").on_hover_text("Zoom arrière (Ctrl+molette)").clicked() {
-                self.zoom_by(0.8);
-            }
-            ui.label(format!("{:.0} %", self.k / BASE_K * 100.0));
-            if ui.button("+").on_hover_text("Zoom avant (Ctrl+molette)").clicked() {
-                self.zoom_by(1.25);
-            }
-            if ui.selectable_label(self.zoom == Zoom::FitPage, "Page entière").clicked() {
-                self.zoom = Zoom::FitPage;
-            }
-            if ui.selectable_label(self.zoom == Zoom::FitWidth, "Largeur").clicked() {
-                self.zoom = Zoom::FitWidth;
-            }
-        });
-        ui.add_space(2.0);
-
-        let avail = ui.available_size();
-        let fit_page = ((avail.x - 16.0) / pw).min((avail.y - 16.0) / ph).max(0.05);
-        let fit_w = ((avail.x - 30.0) / pw).max(0.05);
-        let mut k = match self.zoom {
-            Zoom::FitPage => fit_page,
-            Zoom::FitWidth => fit_w,
-            Zoom::Custom(z) => z,
-        };
-        // Ctrl+molette
-        let over = ui.ctx().pointer_hover_pos().is_some_and(|p| self.preview_rect.contains(p));
-        let zd = if over { ui.ctx().input(|i| i.zoom_delta()) } else { 1.0 };
-        if (zd - 1.0).abs() > 1e-4 {
-            k = (k * zd).clamp(0.1, 6.0);
-            self.zoom = Zoom::Custom(k);
-            self.zoom_at = now;
-        }
-        self.k = k;
-        let size = Vec2::new(pw * k, ph * k);
-        self.scrollable = size.x > avail.x + 1.0 || size.y > avail.y + 1.0;
-
-        // netteté : re-rendu quand le zoom se stabilise
-        let need = (k * ui.ctx().pixels_per_point()).clamp(0.5, 4.0).min(4096.0 / pw.max(ph));
-        let have = self.page.as_ref().map_or(need, |p| p.scale);
-        if need > have * 1.15 || need < have / 2.5 {
-            if now - self.zoom_at > 0.25 {
-                self.rerender(need);
-            } else {
-                ui.ctx().request_repaint_after(std::time::Duration::from_millis(300));
-            }
-        }
-
-        let Some(page) = self.page.as_ref() else { return };
-        let tex = self.tex.get_or_insert_with(|| ui.ctx().load_texture("page", page.image.clone(), Default::default()));
-        let text = render_text(&self.opts, self.cur as u32 + 1, self.n_pages.max(1) as u32);
-        let s = self.opts.font_size;
-        let (bw, bh) = box_size(&text, s);
-        let fx_max = ((pw - bw) / pw).max(0.0);
-        let fy_max = ((ph - bh) / ph).max(0.0);
-        let opts = &mut self.opts;
-
-        egui::ScrollArea::both().auto_shrink(false).show(ui, |ui| {
-            let total = Vec2::new(size.x.max(ui.available_width() - 2.0), size.y.max(ui.available_height() - 2.0));
-            let (area, resp) = ui.allocate_exact_size(total, Sense::click_and_drag());
-            let page_rect = Rect::from_center_size(area.center(), size);
-            let origin = page_rect.min;
-            let painter = ui.painter_at(area);
-            painter.rect_filled(page_rect.expand(2.0), 0.0, Color32::from_black_alpha(70));
-            painter.image(tex.id(), page_rect, Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)), Color32::WHITE);
-
-            let box_rect = |o: &Options| {
-                Rect::from_min_size(
-                    origin + Vec2::new(o.fx.clamp(0.0, fx_max) * pw * k, o.fy.clamp(0.0, fy_max) * ph * k),
-                    Vec2::new(bw * k, bh * k),
-                )
-            };
-            // clic / glissement sur la page : place le centre du rectangle
-            if let Some(p) = resp.interact_pointer_pos().filter(|_| resp.clicked() || resp.dragged()) {
-                opts.fx = (((p.x - origin.x) / k - bw / 2.0) / pw).clamp(0.0, fx_max);
-                opts.fy = (((p.y - origin.y) / k - bh / 2.0) / ph).clamp(0.0, fy_max);
-            }
-            let r = box_rect(opts);
-            #[allow(deprecated)]
-            let drag = ui.interact(r, egui::Id::new("anx_box"), Sense::drag());
-            if drag.dragged() {
-                let d = drag.drag_delta() / k;
-                opts.fx = (opts.fx.clamp(0.0, fx_max) + d.x / pw).clamp(0.0, fx_max);
-                opts.fy = (opts.fy.clamp(0.0, fy_max) + d.y / ph).clamp(0.0, fy_max);
-            }
-            if drag.hovered() || drag.dragged() {
-                ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
-            }
-            let r = box_rect(opts);
-            if opts.white_fill {
-                painter.rect_filled(r, 0.0, Color32::WHITE);
-            }
-            painter.rect_stroke(r, 0.0, Stroke::new(1.5 * k, RED), egui::StrokeKind::Inside);
-            painter.text(r.center(), egui::Align2::CENTER_CENTER, &text, FontId::proportional(s * k * 0.95), RED);
-        });
     }
 }
 
@@ -1154,11 +876,12 @@ impl eframe::App for App {
             self.open(p);
         }
 
-        egui::Panel::top("tabs").show(ui, |ui| {
-            ui.add_space(4.0);
-            self.tabs_bar(ui);
+        egui::Panel::top("steps").show(ui, |ui| {
+            ui.add_space(5.0);
+            self.steps_bar(ui);
             ui.add_space(4.0);
         });
+        egui::Panel::top("filestrip").show(ui, |ui| self.file_strip(ui));
         if self.banner_visible() {
             egui::Panel::top("update").show(ui, |ui| self.update_banner(ui));
         }
@@ -1173,6 +896,7 @@ impl eframe::App for App {
             egui::Panel::left("thumbs").resizable(false).exact_size(THUMB_W + 22.0).show(ui, |ui| self.thumbs_panel(ui));
         }
         egui::CentralPanel::default().show(ui, |ui| self.preview(ui));
+        self.settings_window(&ctx);
 
         self.track_history(now);
         if now - self.last_save_check > 1.0 {

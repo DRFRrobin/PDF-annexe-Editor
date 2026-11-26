@@ -10,27 +10,28 @@
 
 ## Utilisation
 
-Barre d'onglets en haut, barre d'état en bas (bouton **Générer le PDF…** toujours visible), miniatures des pages à gauche de l'aperçu.
+Barre à chevrons en haut : **Fichier → ReeMaker → Annexio → Export** (`Alt+1` à `Alt+4`). Les deux tampons sont facultatifs et se **cumulent** sur le même document ; rien n'est écrit avant l'export, et le fichier d'origine n'est jamais modifié. Le ⚙ ouvre les paramètres (apparence, taille de l'interface, taille de base du cartouche, modèle du nom du PDF, mises à jour, raccourcis).
 
-- **📄 Fichier** : ouvrir un PDF (Ctrl+O, bouton ou glisser-déposer), fichiers récents, navigation, fermer.
-- **⚙ Paramètres** :
-  - *Tampon* : texte (`{annexe}`, `{n}`, `{total}`) et modèles, premier folio, total, taille, pages concernées (Toutes / Paires / Impaires / Page courante ou `1-3,5`), fond blanc, annuler / rétablir.
-  - *Position* : coins, centre, marge.
-  - *Apparence* : thème Système / Clair / Sombre, taille de l'interface (80–200 %), miniatures.
-  - *Raccourcis clavier*.
+1. **Fichier** : ouvrir un PDF (`Ctrl+O`, bouton ou glisser-déposer) ; fichiers récents.
+2. **ReeMaker** : site, R.E.E., indice, folio de départ, type d'arrêt, cycle, pages, tranches, zoom et orientation (Auto d'après le sens du texte, ou 0/90/180/270°). « Démarrer le foliotage » : page par page, un clic place le cartouche (ou on le glisse), **Entrée** ou **clic droit** valide et passe à la page suivante ; « Passer », « Précédente », « Pivoter », « Garder la position ». Les folios se suivent sans trou, les pages passées ne consomment pas de numéro. Cartouche : `Site de … Tr 0` · `REE … | Ind. …` · `Folio n | type d'arrêt`.
+3. **Annexio** : tampon d'une ligne « Annexe X Folio n/N » (modèle, folio, total, taille, pages, positions rapides, marge, annuler/rétablir).
+4. **Export** : récapitulatif et nom automatique d'après ReeMaker, par exemple `REE JPJ 701 Tr 0 Ind A.pdf` (modèle `[REE {ree}][ Tr {tranche}][ Ind {indice}]` réglable ; `[ … ]` = partie facultative). Sans REE ni indice, ou si ReeMaker est ignoré : `<nom>_folioté.pdf`.
 
-Placez le rectangle rouge en le glissant, en cliquant sur la page, ou avec les flèches (1 pt, Maj : 10 pt). La position est la même (en proportion) sur toutes les pages.
-
-Aperçu : molette = changer de page ; Ctrl+molette ou boutons − / + = zoom (la molette fait défiler la page quand elle est agrandie) ; Page préc./suiv., Début/Fin = naviguer. La largeur du panneau de gauche se règle en glissant sa bordure.
+Aperçu : miniatures (pastille rouge = page tamponnée), molette = changer de page, `Ctrl+molette` ou − / + = zoom, `Page préc./suiv.`, `Début`/`Fin`. La largeur du panneau de gauche se règle en glissant sa bordure.
 
 | Raccourci | Action |
 |---|---|
-| Ctrl+O / Ctrl+S / Ctrl+W | Ouvrir / Générer / Fermer |
-| Ctrl+Z / Ctrl+Y | Annuler / Rétablir |
-| Ctrl + / Ctrl − | Taille de l'interface |
-| Échap | Quitter un champ de saisie |
+| `Alt+1` … `Alt+4` | Fichier · ReeMaker · Annexio · Export |
+| `Ctrl+O` / `Ctrl+S` / `Ctrl+W` | Ouvrir / Exporter / Fermer |
+| `Entrée`, clic droit | Valider la page (foliotage) |
+| `Échap` | Annuler le foliotage / quitter un champ |
+| Flèches (`Maj` : ×10) | Déplacer le tampon actif |
+| `Ctrl+Z` / `Ctrl+Y` | Annuler / rétablir (étape Annexio) |
+| `Alt+,` | Paramètres |
 
-Les réglages (texte, position, thème, taille, fichiers récents) sont mémorisés dans un fichier local (`%APPDATA%\Annexio\settings.txt` sous Windows). ## Mise à jour automatique
+Les réglages (textes, position, thème, taille, fichiers récents, ReeMaker) sont mémorisés dans un fichier local (`%APPDATA%\Annexio\settings.txt` sous Windows). Un PDF peut aussi être passé en argument ou « ouvert avec » l'application.
+
+## Mise à jour automatique
 
 Au démarrage, Annexio vérifie en arrière-plan s'il existe une version plus récente (requête vers `api.github.com` ; aucun fichier n'est envoyé). Un bandeau propose **Mettre à jour** ou **Plus tard**. L'installation télécharge le fichier de la release pour votre système, vérifie sa taille et son empreinte SHA-256, remplace l'exécutable (l'ancien est conservé en `.old` jusqu'au lancement suivant) puis propose de redémarrer.
 

@@ -2,6 +2,13 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.21
+- **Application Rust : même parcours que la version web** — barre à chevrons Fichier → ReeMaker → Annexio → Export (Alt+1…4), ⚙ Paramètres en fenêtre (apparence, tampons, modèle de nom, mises à jour, raccourcis).
+- Étape **ReeMaker** : cartouche à 3 lignes dessiné en vectoriel dans le PDF (rotation de page gérée), foliotage page par page (clic = placer, Entrée / clic droit = valider, Passer, Précédente, Pivoter, Tampon −/+, garder la position, Annuler), folios continus sans trou, zoom, orientation 0/90/180/270° ou **automatique** (sens de lecture du texte lu dans le contenu de la page).
+- Étape **Annexio** : le tampon « Annexe X Folio n/N » existant (désormais placé en bas à gauche par défaut). Étape **Export** : récapitulatif et **nom automatique** `REE … Tr … Ind ….pdf` (modèle réglable) ; un seul PDF avec les deux tampons.
+- Miniatures (pastille = page tamponnée), zoom, annuler/rétablir sur l'étape Annexio, réglages ReeMaker mémorisés.
+- Version web : inchangée (seul le numéro suit).
+
 ## 1.1.20
 - **Nom du PDF exporté automatique** d'après ReeMaker : « REE {ree} Tr {tranche} Ind {indice} » (ex. `REE JPJ 701 Tr 0 Ind A.pdf`, `Tr 1,2` si plusieurs tranches). Les parties vides disparaissent ; si ReeMaker est ignoré ou sans REE/indice, le nom reste « <original>_folioté.pdf ». Le nom se met à jour tout seul tant qu'on ne l'a pas modifié à la main (bouton « ↺ Nom automatique »).
 - Modèle de nom réglable dans ⚙ (variables {ree} {tranche} {indice} {site} {arret} {cycle} {nom} {folio1} {folio2} ; `[ … ]` = partie facultative).

@@ -7,9 +7,11 @@ use std::collections::BTreeSet;
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
+pub mod reemaker;
+
 const PAD: f32 = 4.0;
 const BORDER: f32 = 1.5;
-const FONT_NAME: &str = "FAnx";
+pub(crate) const FONT_NAME: &str = "FAnx";
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Options {
@@ -106,7 +108,7 @@ pub fn box_size(text: &str, font_size: f32) -> (f32, f32) {
 }
 
 /// Encodage WinAnsi (cp1252) pour la police standard ; `?` si impossible.
-fn win_ansi(text: &str) -> Vec<u8> {
+pub(crate) fn win_ansi(text: &str) -> Vec<u8> {
     text.chars()
         .map(|c| match c {
             '–' => 0x96,
@@ -119,7 +121,7 @@ fn win_ansi(text: &str) -> Vec<u8> {
         .collect()
 }
 
-fn pdf_string(bytes: &[u8]) -> Vec<u8> {
+pub(crate) fn pdf_string(bytes: &[u8]) -> Vec<u8> {
     let mut out = vec![b'('];
     for &b in bytes {
         if matches!(b, b'(' | b')' | b'\\') {
@@ -151,7 +153,7 @@ fn num(o: &Object) -> Option<f32> {
     o.as_float().ok().or_else(|| o.as_i64().ok().map(|i| i as f32))
 }
 
-fn media_box(doc: &Document, page: ObjectId) -> [f32; 4] {
+pub(crate) fn media_box(doc: &Document, page: ObjectId) -> [f32; 4] {
     if let Some(Object::Array(a)) = inherited(doc, page, b"MediaBox") {
         let v: Vec<f32> = a
             .iter()
@@ -167,12 +169,12 @@ fn media_box(doc: &Document, page: ObjectId) -> [f32; 4] {
     [0.0, 0.0, 612.0, 792.0]
 }
 
-fn rotation(doc: &Document, page: ObjectId) -> i64 {
+pub(crate) fn rotation(doc: &Document, page: ObjectId) -> i64 {
     inherited(doc, page, b"Rotate").and_then(|o| o.as_i64().ok()).unwrap_or(0).rem_euclid(360) / 90 * 90
 }
 
 /// Contenu du tampon, dans le repère non tourné de la page.
-fn stamp_content(o: &Options, text: &str, bx: [f32; 4], rot: i64) -> Vec<u8> {
+pub(crate) fn stamp_content(o: &Options, text: &str, bx: [f32; 4], rot: i64) -> Vec<u8> {
     let s = o.font_size;
     let (w, h) = (bx[2] - bx[0], bx[3] - bx[1]);
     let (vw, vh) = if rot % 180 != 0 { (h, w) } else { (w, h) };
@@ -213,7 +215,7 @@ fn stamp_content(o: &Options, text: &str, bx: [f32; 4], rot: i64) -> Vec<u8> {
     out
 }
 
-fn add_font_to_page(doc: &mut Document, page: ObjectId, font: ObjectId) -> Result<(), String> {
+pub(crate) fn add_font_to_page(doc: &mut Document, page: ObjectId, name: &str, font: ObjectId) -> Result<(), String> {
     let mut res = match inherited(doc, page, b"Resources") {
         Some(Object::Dictionary(d)) => d,
         _ => Dictionary::new(),
@@ -223,7 +225,7 @@ fn add_font_to_page(doc: &mut Document, page: ObjectId, font: ObjectId) -> Resul
         Ok(Object::Reference(r)) => doc.get_dictionary(*r).map(|d| d.clone()).unwrap_or_default(),
         _ => Dictionary::new(),
     };
-    fonts.set(FONT_NAME, Object::Reference(font));
+    fonts.set(name, Object::Reference(font));
     res.set("Font", Object::Dictionary(fonts));
     let p = doc.get_object_mut(page).and_then(Object::as_dict_mut).map_err(|e| e.to_string())?;
     p.set("Resources", Object::Dictionary(res));
@@ -251,7 +253,7 @@ pub fn stamp(input: &[u8], o: &Options) -> Result<(Vec<u8>, usize), String> {
         }
         let text = render_text(o, num, n);
         let content = stamp_content(o, &text, media_box(&doc, id), rotation(&doc, id));
-        add_font_to_page(&mut doc, id, font)?;
+        add_font_to_page(&mut doc, id, FONT_NAME, font)?;
         // q ... Q autour de l'existant pour isoler son état graphique, puis le tampon
         doc.add_page_contents(id, content).map_err(|e| e.to_string())?;
         isolate_existing(&mut doc, id);
@@ -261,7 +263,7 @@ pub fn stamp(input: &[u8], o: &Options) -> Result<(Vec<u8>, usize), String> {
     Ok((out, selected.len()))
 }
 
-fn isolate_existing(doc: &mut Document, page: ObjectId) {
+pub(crate) fn isolate_existing(doc: &mut Document, page: ObjectId) {
     let Ok(Object::Array(list)) = doc.get_dictionary(page).and_then(|d| d.get(b"Contents")).cloned() else { return };
     if list.len() < 2 {
         return;
