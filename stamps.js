@@ -63,7 +63,7 @@
     const arret = String(rm.arret || '').trim();
     const cycle = String(rm.cycle || '').trim();
     return {
-      l1: 'Site de ' + String(rm.site || '').trim() + (tr ? ' ' + tr : ''),
+      l1: 'Site de ' + String(rm.site || '').trim() + (tr ? ' Tr ' + tr : ''),
       l2a: 'REE ' + String(rm.ree || '').trim(),
       l2b: 'Ind. ' + String(rm.indice || '').trim(),
       l3a: 'Folio ' + folio,

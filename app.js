@@ -1,7 +1,7 @@
 'use strict';
 /* Annexio (version web) — chaîne d'étapes : Fichier → ReeMaker → Annexio → Export.
  * Les tampons s'empilent sur le même document ; rien n'est écrit avant l'export. Tout reste dans le navigateur. */
-const APP_VERSION = '1.1.18'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
+const APP_VERSION = '1.1.19'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
 const { PDFDocument, StandardFonts } = PDFLib;
 const St = Stamps;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
