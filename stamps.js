@@ -187,7 +187,9 @@
   function exportName(tpl, rm, original, folios) {
     const tr = trancheLabel(rm.tranches || []).replace(/, /g, ',');
     const vars = { ree: rm.ree, tranche: tr, indice: rm.indice, site: rm.site, arret: rm.arret, cycle: rm.cycle,
-      nom: original, folio1: folios && folios[0], folio2: folios && folios[1] };
+      nom: original, folio1: folios && folios[0], folio2: folios && folios[1],
+      // folios du cartouche ReeMaker : « 36 à 54 », ou « 36 » si une seule page
+      folios: folios ? (folios[0] === folios[1] ? String(folios[0]) : folios[0] + ' à ' + folios[1]) : '' };
     const filled = rm.apply && (String(rm.ree || '').trim() || String(rm.indice || '').trim()); // la tranche seule (0 par défaut) ne suffit pas
     const name = filled ? buildName(tpl, vars) : '';
     return (name || original + '_folioté') + '.pdf';

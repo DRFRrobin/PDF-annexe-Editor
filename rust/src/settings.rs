@@ -39,7 +39,9 @@ pub struct Settings {
     pub recents: Vec<String>,
 }
 
-pub const DEFAULT_NAME_TPL: &str = "[REE {ree}][ Tr {tranche}][ Ind {indice}]";
+pub const DEFAULT_NAME_TPL: &str = "[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]";
+/// Ancien modèle par défaut : remplacé automatiquement par le nouveau (folios en tête).
+const OLD_NAME_TPL: &str = "[REE {ree}][ Tr {tranche}][ Ind {indice}]";
 
 impl Default for Settings {
     fn default() -> Self {
@@ -150,7 +152,7 @@ impl Settings {
                 "rm_orient" => s.rm_orient = v.into(),
                 "base_size" => s.base_size = v.parse::<f32>().unwrap_or(9.0).clamp(5.0, 30.0),
                 "keep_pos" => s.keep_pos = v != "false",
-                "name_tpl" if !v.trim().is_empty() => s.name_tpl = v.into(),
+                "name_tpl" if !v.trim().is_empty() => s.name_tpl = if v == OLD_NAME_TPL { DEFAULT_NAME_TPL.into() } else { v.into() },
                 "recent" if !v.is_empty() => recents.push(v.to_string()),
                 _ => {}
             }
@@ -211,6 +213,12 @@ mod tests {
         s.ui_scale = 1.25;
         s.recents = vec!["C:\\a b\\c.pdf".into(), "/tmp/d.pdf".into()];
         assert_eq!(Settings::from_text(&s.to_text()), s);
+    }
+
+    #[test]
+    fn ancien_modele_de_nom_remplace() {
+        assert_eq!(Settings::from_text(&format!("name_tpl={OLD_NAME_TPL}\n")).name_tpl, DEFAULT_NAME_TPL);
+        assert_eq!(Settings::from_text("name_tpl={nom} perso\n").name_tpl, "{nom} perso");
     }
 
     #[test]

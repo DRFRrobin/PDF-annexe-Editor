@@ -493,7 +493,7 @@ impl App {
                 ui.checkbox(&mut self.keep_pos, "Garder la position pour la suite (foliotage)");
                 ui.label("Modèle du nom du PDF exporté");
                 ui.add(egui::TextEdit::singleline(&mut self.name_tpl).desired_width(f32::INFINITY));
-                ui.small("Variables : {ree} {tranche} {indice} {site} {arret} {cycle} {nom} {folio1} {folio2}. Ce qui est entre [ ] disparaît si une variable est vide. Exemple : « REE JPJ 701 Tr 0 Ind A ».");
+                ui.small("Variables : {ree} {tranche} {indice} {site} {arret} {cycle} {nom} {folios} (« 36 à 54 », folios du cartouche ReeMaker) {folio1} {folio2}. Ce qui est entre [ ] disparaît si une variable est vide. Exemple : « Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A ».");
                 if ui.small_button("Modèle par défaut").clicked() {
                     self.name_tpl = settings::DEFAULT_NAME_TPL.to_string();
                 }

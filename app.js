@@ -1,7 +1,7 @@
 'use strict';
 /* Annexio (version web) — chaîne d'étapes : Fichier → ReeMaker → Annexio → Export.
  * Les tampons s'empilent sur le même document ; rien n'est écrit avant l'export. Tout reste dans le navigateur. */
-const APP_VERSION = '1.1.21'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
+const APP_VERSION = '1.1.22'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
 const { PDFDocument, StandardFonts } = PDFLib;
 const St = Stamps;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
@@ -15,7 +15,8 @@ const DEF_RM = () => ({ apply: true, site: '', ree: '', indice: '', start: 1, ar
   mode: 'all', from: 1, to: 1, tranches: [0], zoom: 1.2, orient: 'auto' });
 const DEF_AN = () => ({ apply: true, annexe: '1', template: 'Annexe {annexe} Folio {n}/{total}', start: 1, total: '', size: 14,
   pages: '', fx: 0.04, fy: 0.93, margin: 20 });
-const DEF_SET = () => ({ theme: 'system', baseSize: 9, fill: true, keepPos: true, nameTpl: '[REE {ree}][ Tr {tranche}][ Ind {indice}]', saveDialog: true });
+const DEF_SET = () => ({ theme: 'system', baseSize: 9, fill: true, keepPos: true, nameTpl: '[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]', saveDialog: true });
+const OLD_NAME_TPL = '[REE {ree}][ Tr {tranche}][ Ind {indice}]'; // ancien modèle par défaut : remplacé automatiquement
 
 const S = {
   name: '', bytes: null, doc: null, n: 0, cur: 0, vis: [],
@@ -37,6 +38,7 @@ function restore() {
     const o = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (!o) return;
     Object.assign(S.rm, o.rm || {}); Object.assign(S.an, o.an || {}); Object.assign(S.set, o.set || {});
+    if (S.set.nameTpl === OLD_NAME_TPL) S.set.nameTpl = DEF_SET().nameTpl; // reprise du nouveau modèle (folios en tête)
     if (Array.isArray(o.arrets) && o.arrets.length) S.arrets = o.arrets;
     S.rm.mode = S.rm.mode === 'range' ? 'range' : 'all';
   } catch (_) { /* valeurs par défaut */ }

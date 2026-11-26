@@ -15,7 +15,7 @@ Barre à chevrons en haut : **Fichier → ReeMaker → Annexio → Export** (`Al
 1. **Fichier** : ouvrir un PDF (`Ctrl+O`, bouton ou glisser-déposer) ; fichiers récents.
 2. **ReeMaker** : site, R.E.E., indice, folio de départ, type d'arrêt, cycle, pages, tranches, zoom et orientation (Auto d'après le sens du texte, ou 0/90/180/270°). « Démarrer le foliotage » : page par page, un clic place le cartouche (ou on le glisse), **Entrée** ou **clic droit** valide et passe à la page suivante ; « Passer », « Précédente », « Pivoter », « Garder la position ». Les folios se suivent sans trou, les pages passées ne consomment pas de numéro. Cartouche : `Site de … Tr 0` · `REE … | Ind. …` · `Folio n | type d'arrêt`.
 3. **Annexio** : tampon d'une ligne « Annexe X Folio n/N » (modèle, folio, total, taille, pages, positions rapides, marge, annuler/rétablir).
-4. **Export** : récapitulatif et nom automatique d'après ReeMaker, par exemple `REE JPJ 701 Tr 0 Ind A.pdf` (modèle `[REE {ree}][ Tr {tranche}][ Ind {indice}]` réglable ; `[ … ]` = partie facultative). Sans REE ni indice, ou si ReeMaker est ignoré : `<nom>_folioté.pdf`.
+4. **Export** : récapitulatif et nom automatique d'après ReeMaker, par exemple `Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A.pdf` : les folios sont ceux du cartouche ReeMaker (première et dernière page foliotée). Modèle `[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]` réglable ; `[ … ]` = partie facultative. Sans REE ni indice, ou si ReeMaker est ignoré : `<nom>_folioté.pdf`.
 
 Aperçu : miniatures (pastille rouge = page tamponnée), molette = changer de page, `Ctrl+molette` ou − / + = zoom, `Page préc./suiv.`, `Début`/`Fin`. La largeur du panneau de gauche se règle en glissant sa bordure.
 

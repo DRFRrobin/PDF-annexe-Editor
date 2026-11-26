@@ -323,6 +323,8 @@ pub fn export_name(tpl: &str, rm: &Rm, apply: bool, original: &str, folios: Opti
     if let Some((a, b)) = folios {
         vars.insert("folio1", a.to_string());
         vars.insert("folio2", b.to_string());
+        // folios du cartouche ReeMaker : « 36 à 54 », ou « 36 » si une seule page
+        vars.insert("folios", if a == b { a.to_string() } else { format!("{a} à {b}") });
     }
     let filled = apply && (!rm.ree.trim().is_empty() || !rm.indice.trim().is_empty());
     let name = if filled { build_name(tpl, &vars) } else { String::new() };
@@ -560,10 +562,13 @@ mod tests {
 
     #[test]
     fn noms_de_fichier() {
-        let t = "[REE {ree}][ Tr {tranche}][ Ind {indice}]";
+        let t = "[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]";
         let rm = Rm { ree: "JPJ 701".into(), indice: "A".into(), ..Rm::default() };
         assert_eq!(export_name(t, &rm, true, "FNC 228", None), "REE JPJ 701 Tr 0 Ind A.pdf");
-        assert_eq!(export_name(t, &Rm { tranches: vec![1, 2], ..rm.clone() }, true, "FNC 228", None), "REE JPJ 701 Tr 1,2 Ind A.pdf");
+        assert_eq!(export_name(t, &rm, true, "FNC 228", Some((36, 54))), "Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A.pdf"); // folios du cartouche
+        assert_eq!(export_name(t, &rm, true, "FNC 228", Some((36, 36))), "Folio 36 de REE JPJ 701 Tr 0 Ind A.pdf"); // une seule page
+        assert_eq!(export_name(t, &rm, false, "FNC 228", Some((36, 54))), "FNC 228_folioté.pdf"); // ReeMaker ignoré
+        assert_eq!(export_name(t, &Rm { tranches: vec![1, 2], ..rm.clone() }, true, "FNC 228", Some((1, 6))), "Folio 1 à 6 de REE JPJ 701 Tr 1,2 Ind A.pdf");
         assert_eq!(export_name(t, &Rm { tranches: vec![], ..rm.clone() }, true, "FNC 228", None), "REE JPJ 701 Ind A.pdf");
         assert_eq!(export_name(t, &rm, false, "FNC 228", None), "FNC 228_folioté.pdf"); // ReeMaker ignoré
         assert_eq!(export_name(t, &Rm::default(), true, "FNC 228", None), "FNC 228_folioté.pdf"); // seule la tranche 0 par défaut
