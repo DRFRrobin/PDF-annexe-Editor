@@ -2,6 +2,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod settings;
+mod update;
 
 use eframe::egui::{self, Align, Color32, FontId, Key, Layout, Modifiers, Pos2, Rect, RichText, Sense, Stroke, Vec2};
 use hayro::hayro_interpret::InterpreterSettings;
@@ -144,6 +145,21 @@ struct Snap {
     size: String,
 }
 
+/// État de la mise à jour.
+enum Upd {
+    Idle,
+    Checking,
+    UpToDate,
+    Available(update::Release),
+    Installing,
+    Done,
+}
+
+enum UpdMsg {
+    Checked(Result<Option<update::Release>, String>),
+    Installed(Result<(), String>),
+}
+
 struct Status {
     text: String,
     err: bool,
@@ -189,6 +205,11 @@ struct App {
     last_change: f64,
     // divers
     recents: Vec<String>,
+    auto_update: bool,
+    upd: Upd,
+    upd_rx: Option<Receiver<UpdMsg>>,
+    upd_dismissed: bool,
+    upd_error: Option<String>,
     status: Status,
     saved_text: String,
     last_save_check: f64,
@@ -236,6 +257,11 @@ impl App {
             last_snap: Snap { opts: Options::default(), start: String::new(), total: String::new(), size: String::new() },
             last_change: -10.0,
             recents: s.recents.clone(),
+            auto_update: s.auto_update,
+            upd: Upd::Idle,
+            upd_rx: None,
+            upd_dismissed: false,
+            upd_error: None,
             status: Status { text: String::new(), err: false, out: None },
             saved_text: s.to_text(),
             last_save_check: 0.0,
@@ -243,6 +269,9 @@ impl App {
         app.sync_opts();
         app.last_snap = app.snap();
         app.say("Ouvrez un PDF (Ctrl+O, bouton ou glisser-déposer).", false);
+        if app.auto_update {
+            app.start_check(); // en arrière-plan : n'empêche pas de travailler
+        }
         app
     }
 
@@ -265,6 +294,7 @@ impl App {
             theme: self.theme,
             ui_scale: self.ui_scale,
             thumbs: self.show_thumbs,
+            auto_update: self.auto_update,
             recents: self.recents.clone(),
         }
     }
@@ -274,6 +304,114 @@ impl App {
         if text != self.saved_text {
             settings::save(&self.settings());
             self.saved_text = text;
+        }
+    }
+
+    // ── mise à jour ──
+
+    fn start_check(&mut self) {
+        let (tx, rx) = channel();
+        let ctx = self.ctx.clone();
+        std::thread::spawn(move || {
+            let _ = tx.send(UpdMsg::Checked(update::check()));
+            ctx.request_repaint();
+        });
+        self.upd_rx = Some(rx);
+        self.upd = Upd::Checking;
+        self.upd_dismissed = false;
+        self.upd_error = None;
+    }
+
+    fn start_install(&mut self, rel: update::Release) {
+        let (tx, rx) = channel();
+        let ctx = self.ctx.clone();
+        std::thread::spawn(move || {
+            let _ = tx.send(UpdMsg::Installed(update::install(&rel).map(|_| ())));
+            ctx.request_repaint();
+        });
+        self.upd_rx = Some(rx);
+        self.upd = Upd::Installing;
+        self.upd_error = None;
+    }
+
+    fn poll_update(&mut self) {
+        let Some(rx) = &self.upd_rx else { return };
+        let Ok(msg) = rx.try_recv() else { return };
+        self.upd_rx = None;
+        match msg {
+            UpdMsg::Checked(Ok(Some(r))) => self.upd = Upd::Available(r),
+            UpdMsg::Checked(Ok(None)) => self.upd = Upd::UpToDate,
+            UpdMsg::Checked(Err(e)) => {
+                self.upd = Upd::Idle;
+                self.upd_error = Some(e);
+            }
+            UpdMsg::Installed(Ok(())) => self.upd = Upd::Done,
+            UpdMsg::Installed(Err(e)) => {
+                self.upd = Upd::Idle;
+                self.upd_error = Some(e);
+            }
+        }
+    }
+
+    fn restart(&mut self, ctx: &egui::Context) {
+        self.save_settings_if_changed();
+        if let Ok(exe) = std::env::current_exe() {
+            let _ = std::process::Command::new(exe).spawn();
+        }
+        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+    }
+
+    /// Bandeau en haut de la fenêtre : nouvelle version, installation, redémarrage.
+    fn update_banner(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+        let mut action: Option<&str> = None;
+        ui.add_space(4.0);
+        ui.horizontal(|ui| match &self.upd {
+            Upd::Available(rel) => {
+                ui.colored_label(RED, format!("⬆ Annexio {} est disponible (vous avez {}).", rel.version, update::current_version()));
+                if rel.asset.is_some() {
+                    if ui.button("Mettre à jour").clicked() {
+                        action = Some("install");
+                    }
+                } else {
+                    ui.label("Pas de fichier pour ce système dans cette version.");
+                }
+                if ui.button("Plus tard").clicked() {
+                    action = Some("later");
+                }
+            }
+            Upd::Installing => {
+                ui.spinner();
+                ui.label("Téléchargement et installation de la mise à jour…");
+            }
+            Upd::Done => {
+                ui.colored_label(GREEN, "✔ Mise à jour installée.");
+                if ui.button("Redémarrer maintenant").clicked() {
+                    action = Some("restart");
+                }
+                ui.label("(ou au prochain lancement)");
+            }
+            _ => {}
+        });
+        ui.add_space(4.0);
+        match action {
+            Some("install") => {
+                if let Upd::Available(rel) = &self.upd {
+                    let rel = rel.clone();
+                    self.start_install(rel);
+                }
+            }
+            Some("later") => self.upd_dismissed = true,
+            Some("restart") => self.restart(&ctx),
+            _ => {}
+        }
+    }
+
+    fn banner_visible(&self) -> bool {
+        match self.upd {
+            Upd::Available(_) => !self.upd_dismissed,
+            Upd::Installing | Upd::Done => true,
+            _ => false,
         }
     }
 
@@ -571,7 +709,7 @@ impl App {
             ui.selectable_value(&mut self.tab, Tab::File, "📄 Fichier");
             ui.selectable_value(&mut self.tab, Tab::Settings, "⚙ Paramètres");
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                ui.small(format!("v{}", env!("CARGO_PKG_VERSION")));
+                ui.small(format!("v{}", update::current_version()));
             });
         });
     }
@@ -790,8 +928,33 @@ impl App {
             }
         });
         ui.separator();
-        ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
-        ui.small("Tout reste sur votre ordinateur. Réglages : mémorisés localement.");
+        ui.label(RichText::new("Application").strong());
+        ui.label(format!("Version {}", update::current_version()));
+        ui.checkbox(&mut self.auto_update, "Vérifier les mises à jour au démarrage")
+            .on_hover_text("Contacte github.com pour savoir si une nouvelle version existe. Aucun de vos fichiers n'est envoyé.");
+        match &self.upd {
+            Upd::Checking => {
+                ui.horizontal(|ui| {
+                    ui.spinner();
+                    ui.label("Recherche en cours…");
+                });
+            }
+            Upd::UpToDate => {
+                ui.colored_label(GREEN, "✔ Vous avez la dernière version.");
+            }
+            Upd::Available(rel) => {
+                ui.colored_label(RED, format!("Version {} disponible.", rel.version));
+            }
+            _ => {}
+        }
+        if let Some(e) = &self.upd_error {
+            ui.colored_label(RED, e);
+        }
+        let busy = matches!(self.upd, Upd::Checking | Upd::Installing);
+        if ui.add_enabled(!busy, egui::Button::new("🔄 Rechercher une mise à jour")).clicked() {
+            self.start_check();
+        }
+        ui.small("Tout reste sur votre ordinateur, sauf cette vérification si elle est activée.");
     }
 
     fn thumbs_panel(&mut self, ui: &mut egui::Ui) {
@@ -984,6 +1147,7 @@ impl eframe::App for App {
             self.ui_scale = z.clamp(0.8, 2.0); // Ctrl+ / Ctrl- gérés par egui
         }
 
+        self.poll_update();
         self.handle_keys(&ctx);
         self.wheel_pages(&ctx);
         if let Some(p) = ctx.input(|i| i.raw.dropped_files.iter().map(|f| f.path().to_path_buf()).next()) {
@@ -995,6 +1159,9 @@ impl eframe::App for App {
             self.tabs_bar(ui);
             ui.add_space(4.0);
         });
+        if self.banner_visible() {
+            egui::Panel::top("update").show(ui, |ui| self.update_banner(ui));
+        }
         egui::Panel::bottom("bar").show(ui, |ui| self.bottom_bar(ui));
         let side = egui::Panel::left("panel")
             .resizable(true) // glisser la bordure pour élargir / rétrécir (curseur ↔)
@@ -1020,6 +1187,7 @@ impl eframe::App for App {
 }
 
 fn main() -> eframe::Result {
+    update::cleanup();
     let s = settings::load();
     let opts = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
