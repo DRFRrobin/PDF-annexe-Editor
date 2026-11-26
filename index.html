@@ -149,8 +149,9 @@
       <h2>Export</h2>
       <ul class="recap" id="recap"></ul>
       <label>Nom du fichier<input id="outName" autocomplete="off"></label>
+      <p class="hint"><span id="outHint"></span> <button type="button" class="sm" id="outAuto" hidden>↺ Nom automatique</button></p>
       <div class="btnrow"><button type="button" id="exportBtn" class="primary">📤 Exporter le PDF…</button></div>
-      <p class="hint">Le fichier d'origine n'est jamais modifié : un nouveau PDF est téléchargé.</p>
+      <p class="hint">Le fichier d'origine n'est jamais modifié : un nouveau PDF est enregistré.</p>
       <p class="ok" id="exportMsg" role="status"></p>
     </div>
   </section>
@@ -189,6 +190,9 @@
     <label>Taille de base du cartouche (pt)<input id="setBase" type="number" min="5" max="30" step="0.5" value="9"></label>
     <label class="chk"><input type="checkbox" id="setFill" checked> Fond blanc sous les tampons</label>
     <label class="chk"><input type="checkbox" id="setKeep" checked> Garder la position pour la suite (foliotage)</label>
+    <label>Modèle du nom du PDF exporté<input id="setNameTpl" autocomplete="off" spellcheck="false"></label>
+    <p class="hint">Variables : {ree} {tranche} {indice} {site} {arret} {cycle} {nom} (nom d'origine) {folio1} {folio2}. Ce qui est entre [ ] disparaît si une variable est vide. Exemple : « REE JPJ 701 Tr 0 Ind A ».</p>
+    <label class="chk"><input type="checkbox" id="setSaveDlg" checked> Proposer la boîte « Enregistrer sous » (Chrome, Edge)</label>
     <div class="btnrow"><button type="button" id="setReset">Réinitialiser les réglages mémorisés</button></div>
     <h3>À propos</h3>
     <p class="hint">Annexio <span id="verAbout"></span> — tout reste dans votre navigateur.<br>

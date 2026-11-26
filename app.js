@@ -1,7 +1,7 @@
 'use strict';
 /* Annexio (version web) — chaîne d'étapes : Fichier → ReeMaker → Annexio → Export.
  * Les tampons s'empilent sur le même document ; rien n'est écrit avant l'export. Tout reste dans le navigateur. */
-const APP_VERSION = '1.1.19'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
+const APP_VERSION = '1.1.20'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
 const { PDFDocument, StandardFonts } = PDFLib;
 const St = Stamps;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
@@ -15,11 +15,11 @@ const DEF_RM = () => ({ apply: true, site: '', ree: '', indice: '', start: 1, ar
   mode: 'all', from: 1, to: 1, tranches: [0], zoom: 1.2, orient: 'auto' });
 const DEF_AN = () => ({ apply: true, annexe: '1', template: 'Annexe {annexe} Folio {n}/{total}', start: 1, total: '', size: 14,
   pages: '', fx: 0.04, fy: 0.93, margin: 20 });
-const DEF_SET = () => ({ theme: 'system', baseSize: 9, fill: true, keepPos: true });
+const DEF_SET = () => ({ theme: 'system', baseSize: 9, fill: true, keepPos: true, nameTpl: '[REE {ree}][ Tr {tranche}][ Ind {indice}]', saveDialog: true });
 
 const S = {
   name: '', bytes: null, doc: null, n: 0, cur: 0, vis: [],
-  step: 0, visited: [false, false, false, false], seen: [false, false, false, false], exported: false, outName: '',
+  step: 0, visited: [false, false, false, false], seen: [false, false, false, false], exported: false, outName: '', outManual: false,
   rm: DEF_RM(), an: DEF_AN(), set: DEF_SET(), arrets: ['TEM'],
   place: {}, skipped: {}, rmDone: false, last: null, run: null, orientCache: {},
   zoom: { mode: 'fit', k: BASE_K }, fonts: null, wheel: 0, thumbToken: 0,
@@ -64,6 +64,10 @@ function folioOf(i) {
 }
 const rmView = () => ({ ...S.rm, baseSize: S.set.baseSize });
 const anActive = () => S.an.apply && S.seen[2];
+function autoName() {
+  const idx = Object.keys(S.place).map(Number).sort((x, y) => x - y);
+  return St.exportName(S.set.nameTpl, S.rm, baseName() || 'document', idx.length ? [folioOf(idx[0]), folioOf(idx[idx.length - 1])] : null);
+}
 function anSet() { try { return St.parseRange(S.an.pages, S.n); } catch (_) { return new Set(); } }
 
 // ───────────────────────── chargement du PDF ─────────────────────────
@@ -75,7 +79,7 @@ async function openFile(file) {
     resetDocument();
     S.bytes = bytes; S.doc = doc; S.n = doc.numPages; S.name = file.name; S.cur = 0;
     S.rm.from = 1; S.rm.to = S.n;
-    S.outName = baseName() + '_folioté.pdf';
+    S.outManual = false; S.outName = autoName();
     syncForm();
     say('« ' + S.name + ' » chargé (' + S.n + ' page(s)).');
     $('wrap').hidden = false; $('empty').hidden = true;
@@ -321,7 +325,6 @@ async function setStep(i) {
   if (S.run && i !== 1) await cancelRun();
   for (let j = 0; j < i; j++) S.visited[j] = true;
   S.step = i; S.visited[i] = true; S.seen[i] = true;
-  if (i === 3 && !S.outName && S.name) S.outName = baseName() + '_folioté.pdf';
   showStepPanel(); renderOverlays(); updateUI();
 }
 function showStepPanel() { $$('.step').forEach(p => { p.hidden = +p.dataset.step !== S.step; }); }
@@ -403,13 +406,24 @@ function renderRecap() {
   if (!S.an.apply) li(false, 'Annexio : ignoré');
   else if (!S.seen[2]) li(false, 'Annexio : étape non ouverte (aucun tampon ajouté)');
   else { let n = 0; try { n = anSet().size; } catch (_) { /* plage invalide */ } li(n > 0 ? true : 'warn', 'Annexio : tampon « ' + (St.annexText(S.an, 1, S.n)) + ' » sur ' + n + ' page(s)'); }
+  if (!S.outManual) S.outName = autoName();
   if (document.activeElement !== $('outName')) $('outName').value = S.outName;
+  $('outAuto').hidden = !S.outManual;
+  $('outHint').textContent = S.outManual ? 'Nom modifié à la main.' : 'Nom automatique d\'après ReeMaker (REE, tranche, indice) ; modifiable.';
 }
 
 // ───────────────────────── export ─────────────────────────
 async function exportPdf() {
   if (!canExport()) return say('Rien à exporter : appliquez au moins un tampon.', true);
-  const btn = $('exportBtn'); btn.disabled = true; $('primary').disabled = true; $('exportMsg').textContent = ''; say('Export en cours…');
+  const btn = $('exportBtn'); $('exportMsg').textContent = '';
+  let name = (S.outName || autoName()).replace(/[\\/:*?"<>|]/g, '-');
+  if (!/\.pdf$/i.test(name)) name += '.pdf';
+  let handle = null;
+  if (S.set.saveDialog && window.showSaveFilePicker) {   // appelé tout de suite : l'activation de l'utilisateur est encore valide
+    try { handle = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] }); name = handle.name; }
+    catch (e) { if (e && e.name === 'AbortError') return say('Export annulé.'); handle = null; }   // autre erreur : téléchargement classique
+  }
+  btn.disabled = true; $('primary').disabled = true; say('Export en cours…');
   try {
     const doc = await PDFDocument.load(S.bytes, { ignoreEncryption: true });
     const reg = await doc.embedFont(StandardFonts.Helvetica), bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -420,13 +434,14 @@ async function exportPdf() {
       if (anActive() && set.has(i + 1)) { St.drawAnnexio(page, bold, St.annexText(S.an, i + 1, S.n), { ...S.an, size: clampNum(S.an.size, 6, 72, 14), fill: S.set.fill }); na++; }
     });
     const out = await doc.save();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([out], { type: 'application/pdf' }));
-    a.download = (S.outName || baseName() + '_folioté.pdf').replace(/[\\/:*?"<>|]/g, '_');
-    if (!/\.pdf$/i.test(a.download)) a.download += '.pdf';
-    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+    if (handle) { const w = await handle.createWritable(); await w.write(out); await w.close(); }
+    else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([out], { type: 'application/pdf' })); a.download = name;
+      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+    }
     S.exported = true;
-    const msg = '✔ Exporté : ' + a.download + ' (' + nc + ' cartouche(s), ' + na + ' tampon(s) Annexio).';
+    const msg = '✔ Exporté : ' + name + ' (' + nc + ' cartouche(s), ' + na + ' tampon(s) Annexio).';
     $('exportMsg').textContent = msg; say(msg);
   } catch (e) { say('Export impossible : ' + e.message, true); }
   btn.disabled = false; updateUI();
@@ -448,6 +463,7 @@ function syncForm() {
   $$('#rmTranches input').forEach(c => { c.checked = S.rm.tranches.includes(+c.value); });
   $('arrets').replaceChildren(...S.arrets.map(v => { const o = document.createElement('option'); o.value = v; return o; }));
   $('setTheme').value = S.set.theme; $('setBase').value = S.set.baseSize; $('setFill').checked = S.set.fill; $('setKeep').checked = S.set.keepPos;
+  $('setNameTpl').value = S.set.nameTpl; $('setSaveDlg').checked = S.set.saveDialog; $('setSaveDlg').disabled = !window.showSaveFilePicker;
 }
 function onFieldChange(id, grp, key, t) {
   const el = $(id);
@@ -503,7 +519,8 @@ function wire() {
   $('anEven').onclick = () => S.n && setAnPages(Array.from({ length: S.n }, (_, i) => i + 1).filter(p => p % 2 === 0).join(','));
   $('anOdd').onclick = () => S.n && setAnPages(Array.from({ length: S.n }, (_, i) => i + 1).filter(p => p % 2 === 1).join(','));
   $$('#anPos button').forEach(b => b.onclick = () => placeAn(+b.dataset.h, +b.dataset.v));
-  $('outName').addEventListener('input', e => { S.outName = e.target.value; });
+  $('outName').addEventListener('input', e => { S.outName = e.target.value; S.outManual = true; $('outAuto').hidden = false; $('outHint').textContent = 'Nom modifié à la main.'; });
+  $('outAuto').onclick = () => { S.outManual = false; updateUI(); };
   $('exportBtn').onclick = exportPdf;
   $('primary').onclick = () => {
     if (S.step === 0) setStep(1);
@@ -536,6 +553,8 @@ function wire() {
   $('setBase').oninput = e => { S.set.baseSize = St.clamp(num(e.target.value, 9), 5, 30); persist(); renderOverlays(); };
   $('setFill').onchange = e => { S.set.fill = e.target.checked; persist(); renderOverlays(); };
   $('setKeep').onchange = e => { S.set.keepPos = e.target.checked; persist(); };
+  $('setNameTpl').oninput = e => { S.set.nameTpl = e.target.value; persist(); if (S.step === 3) updateUI(); };
+  $('setSaveDlg').onchange = e => { S.set.saveDialog = e.target.checked; persist(); };
   $('setReset').onclick = () => { try { localStorage.removeItem(KEY); } catch (_) { /* ignoré */ } S.rm = DEF_RM(); S.an = DEF_AN(); S.set = DEF_SET(); S.arrets = ['TEM']; if (S.doc) { S.rm.to = S.n; } applyTheme(); syncForm(); renderOverlays(); updateUI(); say('Réglages réinitialisés.'); };
   // clavier
   addEventListener('keydown', onKey);

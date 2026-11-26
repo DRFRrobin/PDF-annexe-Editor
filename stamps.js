@@ -171,6 +171,28 @@
     } catch (_) { return 0; }
   }
 
-  root.Stamps = { clamp, safe, width, parseRange, pageGeo, visToPdf, trancheLabel, cartTexts, cartLayout, bbox, place,
+  // ───────────── nom du fichier exporté ─────────────
+  const FORBIDDEN = /[\\/:*?"<>|\u0000-\u001f]/g;
+  /** Modèle -> nom. [ … ] = segment facultatif, supprimé si une variable qu'il contient est vide.
+   *  Ex. « [REE {ree}][ Tr {tranche}][ Ind {indice}] » -> « REE JPJ 701 Tr 0 Ind A ». */
+  function buildName(tpl, vars) {
+    const val = k => String(vars[k] == null ? '' : vars[k]).trim();
+    const fill = s => s.replace(/\{(\w+)\}/g, (_, k) => val(k));
+    const hasEmpty = s => [...s.matchAll(/\{(\w+)\}/g)].some(m => !val(m[1]));
+    let out = String(tpl).replace(/\[([^\]]*)\]/g, (_, seg) => (hasEmpty(seg) ? '' : fill(seg)));
+    out = fill(out).replace(FORBIDDEN, '-').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '');
+    return out;
+  }
+  /** Nom proposé à l'export : d'après ReeMaker s'il est rempli, sinon « <original>_folioté ». */
+  function exportName(tpl, rm, original, folios) {
+    const tr = trancheLabel(rm.tranches || []).replace(/, /g, ',');
+    const vars = { ree: rm.ree, tranche: tr, indice: rm.indice, site: rm.site, arret: rm.arret, cycle: rm.cycle,
+      nom: original, folio1: folios && folios[0], folio2: folios && folios[1] };
+    const filled = rm.apply && (String(rm.ree || '').trim() || String(rm.indice || '').trim()); // la tranche seule (0 par défaut) ne suffit pas
+    const name = filled ? buildName(tpl, vars) : '';
+    return (name || original + '_folioté') + '.pdf';
+  }
+
+  root.Stamps = { buildName, exportName, clamp, safe, width, parseRange, pageGeo, visToPdf, trancheLabel, cartTexts, cartLayout, bbox, place,
     localToVisual, drawCartouche, annexText, annexLayout, drawAnnexio, detectOrientation, A_PAD, A_BORDER };
 })(typeof window !== 'undefined' ? window : globalThis);

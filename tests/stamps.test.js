@@ -16,6 +16,20 @@ const { PDFDocument, StandardFonts, degrees } = PDFLib;
   assert.strictEqual(S.parseRange('', 4).size, 4);
   assert.throws(() => S.parseRange('a', 4));
 
+  // nom du fichier exporté
+  const T = '[REE {ree}][ Tr {tranche}][ Ind {indice}]';
+  assert.strictEqual(S.buildName(T, { ree: 'JPJ 701', tranche: '0', indice: 'A' }), 'REE JPJ 701 Tr 0 Ind A');
+  assert.strictEqual(S.buildName(T, { ree: 'JPJ 701', tranche: '', indice: 'A' }), 'REE JPJ 701 Ind A');
+  assert.strictEqual(S.buildName(T, { ree: '', tranche: '1', indice: '' }), 'Tr 1');
+  assert.strictEqual(S.buildName(T, {}), '');
+  assert.strictEqual(S.buildName('[REE {ree}]', { ree: 'JPJ/701:x' }), 'REE JPJ-701-x');
+  assert.strictEqual(S.buildName('{site} - {nom}', { site: 'A', nom: 'doc' }), 'A - doc');
+  const rmN = { apply: true, ree: 'JPJ 701', indice: 'A', tranches: [0], site: 'S' };
+  assert.strictEqual(S.exportName(T, rmN, 'FNC 228', null), 'REE JPJ 701 Tr 0 Ind A.pdf');
+  assert.strictEqual(S.exportName(T, { ...rmN, tranches: [1, 2] }, 'FNC 228', null), 'REE JPJ 701 Tr 1,2 Ind A.pdf');
+  assert.strictEqual(S.exportName(T, { ...rmN, apply: false }, 'FNC 228', null), 'FNC 228_folioté.pdf'); // ReeMaker ignoré
+  assert.strictEqual(S.exportName(T, { apply: true, tranches: [0] }, 'FNC 228', null), 'FNC 228_folioté.pdf'); // seule la tranche par défaut
+
   const doc = await PDFDocument.create();
   const reg = await doc.embedFont(StandardFonts.Helvetica), bold = await doc.embedFont(StandardFonts.HelveticaBold);
 
