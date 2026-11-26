@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="system">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,35 +8,198 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><h1><img class="logo" src="assets/favicon-64.png" alt="" width="28" height="28"> Annexio <small id="ver"></small></h1><p>Tampon rouge « Annexe X – Folio n/N » sur chaque page. 100&nbsp;% local : votre fichier ne quitte jamais le navigateur.</p><p><a href="https://github.com/DRFRrobin/PDF-annexe-Editor" target="_blank" rel="noopener">Code source sur GitHub</a></p></header>
-<main>
-  <aside id="panel">
-    <label class="drop" id="drop">
-      <input type="file" id="file" accept="application/pdf">
-      <span id="dropText">Choisir ou glisser un PDF</span>
-    </label>
-    <fieldset id="opts" disabled>
-      <label>Annexe (X)<input id="annexe" value="1"></label>
-      <label>Texte (modèle)<input id="tpl" value="Annexe {annexe} Folio {n}/{total}"></label>
-      <small>Variables : {annexe} {n} {total}</small>
-      <label>Premier folio<input id="start" type="number" min="1" value="1"></label>
-      <label>Total (N)<input id="total" type="number" min="1" placeholder="auto = nombre de pages"></label>
-      <label>Taille du texte (pt)<input id="size" type="number" min="6" max="72" value="14"></label>
-      <label>Pages à tamponner<input id="range" placeholder="toutes (ex : 1-3,5)"></label>
-      <label class="chk"><input id="fill" type="checkbox" checked> Fond blanc</label>
-      <label>Page d'aperçu
-        <span class="nav"><button id="prev" type="button">‹</button><span id="pg">1/1</span><button id="next" type="button">›</button></span>
+
+<header class="top">
+  <div class="brand"><img src="assets/favicon-64.png" alt="" width="26" height="26"><b>Annexio</b><small id="ver"></small></div>
+  <nav class="steps" id="steps" aria-label="Étapes">
+    <button type="button" class="chev" data-step="0"><i>1</i><span><b>Fichier</b><small></small></span></button>
+    <button type="button" class="chev" data-step="1"><i>2</i><span><b>ReeMaker</b><small></small></span></button>
+    <button type="button" class="chev" data-step="2"><i>3</i><span><b>Annexio</b><small></small></span></button>
+    <button type="button" class="chev" data-step="3"><i>4</i><span><b>Export</b><small></small></span></button>
+  </nav>
+  <div class="tools"><button type="button" id="btnSettings" class="icon" title="Paramètres (Alt+,)" aria-label="Paramètres">⚙</button></div>
+</header>
+
+<div class="filebar" id="filebar">
+  <span id="fileInfo">Aucun PDF — glissez-le dans la fenêtre ou cliquez sur « Choisir un PDF ».</span>
+  <span class="grow"></span>
+  <button type="button" id="btnPrev" class="sm" title="Page précédente (Page préc.)" aria-label="Page précédente">‹</button>
+  <span id="pageInd" aria-live="polite"></span>
+  <button type="button" id="btnNext" class="sm" title="Page suivante (Page suiv.)" aria-label="Page suivante">›</button>
+  <button type="button" id="btnClose" class="sm" title="Fermer le PDF">Fermer ✕</button>
+</div>
+
+<main class="work">
+  <aside class="thumbs" id="thumbs" aria-label="Pages"></aside>
+
+  <section class="panel" id="panel">
+
+    <!-- 1 · Fichier -->
+    <div class="step" data-step="0">
+      <h2>Fichier</h2>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="application/pdf">
+        <span id="dropText">Choisir un PDF<br><small>ou le glisser ici · Ctrl+O</small></span>
       </label>
-      <button id="go" type="button">Générer et télécharger</button>
-      <p id="msg" role="status"></p>
-    </fieldset>
-    <p class="hint">Glissez le rectangle rouge (ou cliquez sur la page) pour choisir l'emplacement. Il est appliqué à la même position relative sur toutes les pages.</p>
-  <a class="repo" href="https://github.com/DRFRrobin/PDF-annexe-Editor" target="_blank" rel="noopener">Ouvrir le dépôt GitHub ↗</a>
-  </aside>
-  <section id="stage"><div id="wrap" hidden><canvas id="cv"></canvas><div id="box"></div></div><p id="empty">Aucun PDF chargé.</p></section>
+      <p class="hint">Tout reste dans votre navigateur : le PDF n'est envoyé nulle part.</p>
+    </div>
+
+    <!-- 2 · ReeMaker -->
+    <div class="step" data-step="1" hidden>
+      <h2>ReeMaker <small>cartouche à 3 lignes</small></h2>
+      <div id="rmForm">
+        <div class="seg">
+          <label><input type="radio" name="rmApply" value="1" checked> Appliquer le cartouche</label>
+          <label><input type="radio" name="rmApply" value="0"> Ignorer cette étape</label>
+        </div>
+        <fieldset id="rmFields">
+          <div class="grid3">
+            <label class="f2">Site<input id="rmSite" autocomplete="off"></label>
+            <label>R.E.E.<input id="rmRee" autocomplete="off" placeholder="001"></label>
+            <label>Indice<input id="rmIndice" autocomplete="off" placeholder="A"></label>
+          </div>
+          <div class="grid3">
+            <label>Folio de départ<input id="rmStart" type="number" min="1" value="1"></label>
+            <label>Type d'arrêt<input id="rmArret" list="arrets" autocomplete="off" placeholder="TEM"></label>
+            <label>Cycle<input id="rmCycle" autocomplete="off"></label>
+          </div>
+          <datalist id="arrets"><option value="TEM"></datalist>
+          <label class="chk"><input type="checkbox" id="rmShowCycle"> Afficher le cycle dans le cartouche</label>
+
+          <h3>Pages à folioter</h3>
+          <div class="row nowrap">
+            <label class="chk"><input type="radio" name="rmMode" value="all" checked> Totalité</label>
+            <label class="chk"><input type="radio" name="rmMode" value="range"> Pages de</label>
+            <input id="rmFrom" type="number" min="1" value="1" class="num" aria-label="Première page">
+            <span>à</span>
+            <input id="rmTo" type="number" min="1" value="1" class="num" aria-label="Dernière page">
+          </div>
+
+          <h3>Tranche(s) concernée(s)</h3>
+          <div class="tranches" id="rmTranches"></div>
+
+          <h3>Tampon</h3>
+          <div class="row">
+            <label class="col">Zoom<input id="rmZoom" type="number" min="0.5" max="3" step="0.1" value="1.2" class="num"></label>
+            <label>Orientation
+              <select id="rmOrient">
+                <option value="auto">Auto (sens du texte)</option>
+                <option value="0">0°</option><option value="90">90°</option>
+                <option value="180">180°</option><option value="270">270°</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <div class="btnrow"><button type="button" id="rmStartBtn" class="primary">▶ Démarrer le foliotage</button></div>
+        <p class="hint" id="rmDoneInfo"></p>
+      </div>
+
+      <div id="rmRun" hidden>
+        <div class="banner"><b>Foliotage en cours</b><span id="runInfo"></span></div>
+        <p class="hint"><b>Clic</b> : placer le tampon (ou le glisser). <b>Entrée</b> ou <b>clic droit</b> : valider et passer à la page suivante. Flèches : ajuster (Maj : ×10).</p>
+        <div class="btnrow col">
+          <button type="button" id="runOk" class="primary">✔ Valider et page suivante</button>
+          <div class="row"><button type="button" id="runPrev">‹ Précédente</button><button type="button" id="runSkip">Passer ›</button></div>
+        </div>
+        <div class="row small"><button type="button" class="sm" id="runRot" title="Tourner le cartouche de 90°">↻ Pivoter</button><button type="button" class="sm" id="runZm">Tampon −</button><button type="button" class="sm" id="runZp">Tampon +</button></div>
+        <label class="chk"><input type="checkbox" id="runKeep" checked> Garder la position pour la suite</label>
+        <h3>Avancement</h3>
+        <div id="runList" class="runlist"></div>
+        <div class="btnrow"><button type="button" id="runCancel">Annuler le foliotage</button></div>
+      </div>
+    </div>
+
+    <!-- 3 · Annexio -->
+    <div class="step" data-step="2" hidden>
+      <h2>Annexio <small>tampon « Annexe X Folio n/N »</small></h2>
+      <div class="seg">
+        <label><input type="radio" name="anApply" value="1" checked> Appliquer le tampon</label>
+        <label><input type="radio" name="anApply" value="0"> Ignorer cette étape</label>
+      </div>
+      <fieldset id="anFields">
+        <div class="grid2">
+          <label>Annexe (X)<input id="anAnnexe" value="1" autocomplete="off"></label>
+          <label>Premier folio<input id="anStart" type="number" min="1" value="1"></label>
+        </div>
+        <label>Texte<input id="anTpl" value="Annexe {annexe} Folio {n}/{total}" autocomplete="off"></label>
+        <p class="hint">Variables : {annexe} {n} {total}</p>
+        <div class="grid2">
+          <label>Total (N)<input id="anTotal" type="number" min="1" placeholder="auto"></label>
+          <label>Taille (pt)<input id="anSize" type="number" min="6" max="72" value="14"></label>
+        </div>
+        <label>Pages<input id="anPages" placeholder="toutes (ex : 1-3,5)" autocomplete="off"></label>
+        <div class="row small">
+          <button type="button" class="sm" id="anAll">Toutes</button><button type="button" class="sm" id="anEven">Paires</button>
+          <button type="button" class="sm" id="anOdd">Impaires</button><button type="button" class="sm" id="anCur">Page courante</button>
+        </div>
+        <h3>Position</h3>
+        <div class="row small" id="anPos">
+          <button type="button" class="sm" data-h="0" data-v="0">Haut gauche</button><button type="button" class="sm" data-h=".5" data-v="0">Haut centre</button>
+          <button type="button" class="sm" data-h="1" data-v="0">Haut droite</button><button type="button" class="sm" data-h=".5" data-v=".5">Centre</button>
+          <button type="button" class="sm" data-h="0" data-v="1">Bas gauche</button><button type="button" class="sm" data-h=".5" data-v="1">Bas centre</button>
+          <button type="button" class="sm" data-h="1" data-v="1">Bas droite</button>
+        </div>
+        <label class="inline">Marge<input id="anMargin" type="number" min="0" max="200" value="20" class="num"> pt</label>
+        <p class="hint">Glissez le rectangle rouge, ou cliquez sur la page. Flèches : ajuster d'1 pt (Maj : 10 pt).</p>
+      </fieldset>
+    </div>
+
+    <!-- 4 · Export -->
+    <div class="step" data-step="3" hidden>
+      <h2>Export</h2>
+      <ul class="recap" id="recap"></ul>
+      <label>Nom du fichier<input id="outName" autocomplete="off"></label>
+      <div class="btnrow"><button type="button" id="exportBtn" class="primary">📤 Exporter le PDF…</button></div>
+      <p class="hint">Le fichier d'origine n'est jamais modifié : un nouveau PDF est téléchargé.</p>
+      <p class="ok" id="exportMsg" role="status"></p>
+    </div>
+  </section>
+
+  <section class="stage" id="stage">
+    <div class="ztool">
+      <button type="button" class="sm" id="zOut" title="Zoom arrière (Ctrl + molette)">−</button>
+      <span id="zVal">100 %</span>
+      <button type="button" class="sm" id="zIn" title="Zoom avant (Ctrl + molette)">+</button>
+      <button type="button" class="sm" id="zFit">Page entière</button>
+      <button type="button" class="sm" id="zWidth">Largeur</button>
+    </div>
+    <div class="scroller" id="scroller">
+      <div class="empty" id="empty">Aucun PDF chargé.</div>
+      <div class="wrap" id="wrap" hidden>
+        <canvas id="cv"></canvas>
+        <div class="ov" id="ovC"></div>
+        <div class="ov ann" id="ovA"></div>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer class="bottom">
+  <span id="status" role="status" aria-live="polite"></span>
+  <span class="grow"></span>
+  <button type="button" id="primary" class="primary">Suivant ▸</button>
+</footer>
+
+<dialog id="settings">
+  <form method="dialog">
+    <h2>Paramètres</h2>
+    <label>Thème
+      <select id="setTheme"><option value="system">Système</option><option value="light">Clair</option><option value="dark">Sombre</option></select>
+    </label>
+    <label>Taille de base du cartouche (pt)<input id="setBase" type="number" min="5" max="30" step="0.5" value="9"></label>
+    <label class="chk"><input type="checkbox" id="setFill" checked> Fond blanc sous les tampons</label>
+    <label class="chk"><input type="checkbox" id="setKeep" checked> Garder la position pour la suite (foliotage)</label>
+    <div class="btnrow"><button type="button" id="setReset">Réinitialiser les réglages mémorisés</button></div>
+    <h3>À propos</h3>
+    <p class="hint">Annexio <span id="verAbout"></span> — tout reste dans votre navigateur.<br>
+      <a href="https://github.com/DRFRrobin/PDF-annexe-Editor" target="_blank" rel="noopener">Code source sur GitHub</a></p>
+    <div class="btnrow"><button value="close" class="primary">Fermer</button></div>
+  </form>
+</dialog>
+
 <script src="vendor/pdf-lib.min.js"></script>
 <script src="vendor/pdf.min.js"></script>
+<script src="stamps.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
