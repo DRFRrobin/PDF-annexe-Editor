@@ -1,6 +1,6 @@
 [package]
 name = "annexio"
-version = "1.1.23"
+version = "1.1.24"
 edition = "2021"
 build = "build.rs"
 description = "Annexio : ajoute un rectangle rouge « Annexe X Folio n/N » sur les pages d'un PDF (100 % local)"
@@ -38,4 +38,9 @@ getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [profile.release]
 strip = true
-lto = "thin"
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+[profile.dev.package."*"]
+opt-level = 2
