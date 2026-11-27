@@ -2,6 +2,9 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.24
+- **Rust : compilation optimisée** (LTO complète, 1 unité de génération) pour un exécutable plus rapide ; les dépendances sont aussi optimisées en mode développement (aperçu PDF plus fluide dans les builds de test). Aucun changement fonctionnel.
+
 ## 1.1.23
 - **Nouveau gabarit du cartouche, fidèle au modèle d'origine** (web et Rust) : police Arial/Helvetica, traits de même épaisseur, ligne 2 coupée vers 65 %, ligne 3 vers 45 %, « Tr 0 » à position fixe à droite de la ligne 1 (il chevauche donc un long nom de site, comme sur l'original), arrêt aligné à droite. Largeur fixe : un texte trop long déborde au lieu d'agrandir la case.
 - **Paramètres → Version du cartouche** : **V0** = modèle d'origine avec ses défauts (par défaut) ; **V1** = mise en page adaptative de la version précédente. Réglage mémorisé, appliqué à l'aperçu et au PDF exporté.
