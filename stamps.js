@@ -63,7 +63,8 @@
     const arret = String(rm.arret || '').trim();
     const cycle = String(rm.cycle || '').trim();
     return {
-      l1: 'Site de ' + String(rm.site || '').trim() + (tr ? ' Tr ' + tr : ''),
+      l1: 'Site de ' + String(rm.site || '').trim() + (rm.cartVer === '1' && tr ? ' Tr ' + tr : ''),
+      tr: rm.cartVer !== '1' && tr ? 'Tr ' + tr : '',
       l2a: 'REE ' + String(rm.ree || '').trim(),
       l2b: 'Ind. ' + String(rm.indice || '').trim(),
       l3a: 'Folio ' + folio,
@@ -71,17 +72,34 @@
     };
   }
 
-  /** Dimensions du cartouche non tourné (origine en haut à gauche, y vers le bas). */
+  /** Cartouche modèle (gabarit fixe, mesuré sur le cartouche d'origine). Toutes les cotes sont des multiples
+   *  de la taille de police : un texte trop long déborde comme sur l'original (ex. « Tr 0 » sur le nom du site).
+   *  Origine en haut à gauche, y vers le bas. */
   function cartLayout(font, rm, folio) {
     const fs = (rm.baseSize || 9) * (rm.zoom || 1);
-    const padx = fs * 0.45, pady = fs * 0.22;
-    const rowH = fs * 1.2 + 2 * pady;
-    const bw = Math.max(0.6, fs * 0.09);
+    if (rm.cartVer === '1') return cartLayoutV1(font, rm, folio, fs);
+    const rowH = fs * 2.0, bw = Math.max(0.6, fs * 0.13), padx = fs * 0.47;
+    const W = fs * 13.55, d2 = fs * 8.9, d3 = fs * 6.17;
+    const t = cartTexts(rm, folio);
+    // items : x = bord gauche du texte, ou bord droit si right
+    const items = [
+      { s: t.l1, x: padx, row: 0 }, { s: t.tr, x: fs * 11.3, row: 0 },
+      { s: t.l2a, x: padx, row: 1 }, { s: t.l2b, x: d2 + fs * 0.56, row: 1 },
+      { s: t.l3a, x: padx, row: 2 }, { s: t.l3b, x: W - fs * 0.46, row: 2, right: true },
+    ].filter(it => it.s);
+    return { fs, padx, rowH, bw, base: 0.42, W, H: 3 * rowH, d2, d3, leftW: d2, rightW: W - d2, t, items };
+  }
+  /** V1 : gabarit adaptatif (la largeur suit le texte, « Ind. »/arrêt centrés). */
+  function cartLayoutV1(font, rm, folio, fs) {
+    const padx = fs * 0.45, pady = fs * 0.22, rowH = fs * 1.2 + 2 * pady, bw = Math.max(0.6, fs * 0.09);
     const t = cartTexts(rm, folio);
     const rightW = Math.max(width(font, t.l2b, fs), width(font, t.l3b, fs)) + 2 * padx;
     const leftMin = Math.max(width(font, t.l2a, fs), width(font, t.l3a, fs)) + 2 * padx;
-    const W = Math.max(width(font, t.l1, fs) + 2 * padx, leftMin + rightW);
-    return { fs, padx, pady, rowH, bw, W, H: 3 * rowH, leftW: W - rightW, rightW, t };
+    const W = Math.max(width(font, t.l1, fs) + 2 * padx, leftMin + rightW), leftW = W - rightW;
+    const c = str => leftW + (rightW - width(font, str, fs)) / 2;
+    const items = [{ s: t.l1, x: padx, row: 0 }, { s: t.l2a, x: padx, row: 1 }, { s: t.l2b, x: c(t.l2b), row: 1 },
+      { s: t.l3a, x: padx, row: 2 }, { s: t.l3b, x: c(t.l3b), row: 2 }].filter(it => it.s);
+    return { fs, padx, rowH, bw, base: 0.35, W, H: 3 * rowH, d2: leftW, d3: leftW, leftW, rightW, t, items };
   }
   const bbox = (ly, orient) => (orient === 90 || orient === 270) ? { w: ly.H, h: ly.W } : { w: ly.W, h: ly.H };
 
@@ -114,18 +132,15 @@
         lineTo(pts[1].x, pts[1].y), lineTo(pts[2].x, pts[2].y), lineTo(pts[3].x, pts[3].y), closePath(), fill(), popGraphicsState());
     }
     const line = (a, b) => page.drawLine({ start: P(a[0], a[1]), end: P(b[0], b[1]), thickness: ly.bw, color, lineCap: LineCapStyle.Projecting });
-    const { W, H, rowH, leftW } = ly;
+    const { W, H, rowH } = ly;
     line([0, 0], [W, 0]); line([W, 0], [W, H]); line([W, H], [0, H]); line([0, H], [0, 0]);
-    line([0, rowH], [W, rowH]); line([0, 2 * rowH], [W, 2 * rowH]); line([leftW, rowH], [leftW, H]);
+    line([0, rowH], [W, rowH]); line([0, 2 * rowH], [W, 2 * rowH]); line([ly.d2, rowH], [ly.d2, 2 * rowH]); line([ly.d3, 2 * rowH], [ly.d3, H]);
     const angle = ((g.rot - orient) % 360 + 360) % 360;
-    const text = (str, lx, row) => {
-      const p = P(lx, row * rowH + rowH / 2 + 0.35 * ly.fs);
-      page.drawText(safe(font, str), { x: p.x, y: p.y, size: ly.fs, font, color, rotate: degrees(angle) });
-    };
-    const t = ly.t, cx = (str, x0, w) => x0 + (w - width(font, str, ly.fs)) / 2;
-    text(t.l1, ly.padx, 0);
-    text(t.l2a, ly.padx, 1); text(t.l2b, cx(t.l2b, leftW, ly.rightW), 1);
-    text(t.l3a, ly.padx, 2); text(t.l3b, cx(t.l3b, leftW, ly.rightW), 2);
+    for (const it of ly.items) {
+      const x = it.right ? it.x - width(font, it.s, ly.fs) : it.x;
+      const p = P(x, it.row * rowH + rowH / 2 + ly.base * ly.fs);
+      page.drawText(safe(font, it.s), { x: p.x, y: p.y, size: ly.fs, font, color, rotate: degrees(angle) });
+    }
   }
 
   // ───────────── tampon « Annexe X Folio n/N » (une ligne, gras) ─────────────

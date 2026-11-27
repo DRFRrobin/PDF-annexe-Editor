@@ -35,21 +35,18 @@ fn paint_cart(painter: &egui::Painter, origin: Pos2, k: f32, vis: (f32, f32), l:
     painter.add(egui::Shape::closed_line(corners, st));
     painter.line_segment([pt(0.0, l.row_h), pt(l.w, l.row_h)], st);
     painter.line_segment([pt(0.0, 2.0 * l.row_h), pt(l.w, 2.0 * l.row_h)], st);
-    painter.line_segment([pt(l.left_w, l.row_h), pt(l.left_w, l.h)], st);
+    painter.line_segment([pt(l.d2, l.row_h), pt(l.d2, 2.0 * l.row_h)], st);
+    painter.line_segment([pt(l.d3, 2.0 * l.row_h), pt(l.d3, l.h)], st);
     let font = FontId::proportional((l.fs * k).max(4.0));
     let angle = (o as f32).to_radians();
-    let text = |s: &str, row: usize, centered: bool| {
-        let galley = painter.layout_no_wrap(s.to_string(), font.clone(), red);
+    for i in &l.items {
+        let galley = painter.layout_no_wrap(i.s.clone(), font.clone(), red);
         let (gw, gh) = (galley.size().x / k, galley.size().y / k);
-        let x = if centered { l.left_w + (l.right_w - gw) / 2.0 } else { l.padx };
-        let y = row as f32 * l.row_h + (l.row_h - gh) / 2.0;
+        let x = if i.right { i.x - gw } else { i.x };
+        // ligne de base alignée comme dans le PDF
+        let y = i.row as f32 * l.row_h + l.row_h / 2.0 + l.base * l.fs - 0.8 * gh;
         painter.add(egui::epaint::TextShape::new(pt(x, y), galley, red).with_angle(angle));
-    };
-    text(&l.t.l1, 0, false);
-    text(&l.t.l2a, 1, false);
-    text(&l.t.l2b, 1, true);
-    text(&l.t.l3a, 2, false);
-    text(&l.t.l3b, 2, true);
+    }
 }
 
 impl App {

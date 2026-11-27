@@ -1,7 +1,7 @@
 'use strict';
 /* Annexio (version web) — chaîne d'étapes : Fichier → ReeMaker → Annexio → Export.
  * Les tampons s'empilent sur le même document ; rien n'est écrit avant l'export. Tout reste dans le navigateur. */
-const APP_VERSION = '1.1.22'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
+const APP_VERSION = '1.1.23'; // +0.0.1 à chaque mise à jour (voir CHANGELOG.md)
 const { PDFDocument, StandardFonts } = PDFLib;
 const St = Stamps;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
@@ -15,7 +15,7 @@ const DEF_RM = () => ({ apply: true, site: '', ree: '', indice: '', start: 1, ar
   mode: 'all', from: 1, to: 1, tranches: [0], zoom: 1.2, orient: 'auto' });
 const DEF_AN = () => ({ apply: true, annexe: '1', template: 'Annexe {annexe} Folio {n}/{total}', start: 1, total: '', size: 14,
   pages: '', fx: 0.04, fy: 0.93, margin: 20 });
-const DEF_SET = () => ({ theme: 'system', baseSize: 9, fill: true, keepPos: true, nameTpl: '[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]', saveDialog: true });
+const DEF_SET = () => ({ theme: 'system', baseSize: 9, fill: true, keepPos: true, cartVer: '0', nameTpl: '[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]', saveDialog: true });
 const OLD_NAME_TPL = '[REE {ree}][ Tr {tranche}][ Ind {indice}]'; // ancien modèle par défaut : remplacé automatiquement
 
 const S = {
@@ -64,7 +64,7 @@ function folioOf(i) {
   for (const j of rmPages()) { if (j === i) break; if (!S.skipped[j]) c++; }
   return (parseInt(S.rm.start) || 1) + c;
 }
-const rmView = () => ({ ...S.rm, baseSize: S.set.baseSize });
+const rmView = () => ({ ...S.rm, baseSize: S.set.baseSize, cartVer: S.set.cartVer });
 const anActive = () => S.an.apply && S.seen[2];
 function autoName() {
   const idx = Object.keys(S.place).map(Number).sort((x, y) => x - y);
@@ -157,10 +157,12 @@ function drawCartouche(el, pl, folio, k, v, mode) {
   const b = ly.bw;
   line(-b / 2, -b / 2, ly.W + b, b); line(-b / 2, ly.H - b / 2, ly.W + b, b);
   line(-b / 2, -b / 2, b, ly.H + b); line(ly.W - b / 2, -b / 2, b, ly.H + b);
-  line(0, ly.rowH - b / 2, ly.W, b); line(0, 2 * ly.rowH - b / 2, ly.W, b); line(ly.leftW - b / 2, ly.rowH, b, 2 * ly.rowH);
-  const t = ly.t, text = (str, x, row) => ci.append(mk('span', `left:${x * k}px;top:${row * ly.rowH * k}px;height:${ly.rowH * k}px;line-height:${ly.rowH * k}px;font-size:${ly.fs * k}px`, str));
-  const cx = str => ly.leftW + (ly.rightW - St.width(S.fonts.reg, str, ly.fs)) / 2;
-  text(t.l1, ly.padx, 0); text(t.l2a, ly.padx, 1); text(t.l2b, cx(t.l2b), 1); text(t.l3a, ly.padx, 2); text(t.l3b, cx(t.l3b), 2);
+  line(0, ly.rowH - b / 2, ly.W, b); line(0, 2 * ly.rowH - b / 2, ly.W, b);
+  line(ly.d2 - b / 2, ly.rowH, b, ly.rowH); line(ly.d3 - b / 2, 2 * ly.rowH, b, ly.rowH);
+  for (const it of ly.items) {
+    const w = St.width(S.fonts.reg, it.s, ly.fs), x = (it.right ? it.x - w : it.x) * k, top = (it.row * ly.rowH + ly.rowH / 2 + ly.base * ly.fs - 0.846 * ly.fs) * k;
+    ci.append(mk('span', `left:${x}px;top:${top}px;height:${ly.fs * k}px;line-height:${ly.fs * k}px;font-size:${ly.fs * k}px`, it.s));
+  }
   el.append(ci);
 }
 
@@ -465,7 +467,7 @@ function syncForm() {
   $$('#rmTranches input').forEach(c => { c.checked = S.rm.tranches.includes(+c.value); });
   $('arrets').replaceChildren(...S.arrets.map(v => { const o = document.createElement('option'); o.value = v; return o; }));
   $('setTheme').value = S.set.theme; $('setBase').value = S.set.baseSize; $('setFill').checked = S.set.fill; $('setKeep').checked = S.set.keepPos;
-  $('setNameTpl').value = S.set.nameTpl; $('setSaveDlg').checked = S.set.saveDialog; $('setSaveDlg').disabled = !window.showSaveFilePicker;
+  $('setCartVer').value = S.set.cartVer; $('setNameTpl').value = S.set.nameTpl; $('setSaveDlg').checked = S.set.saveDialog; $('setSaveDlg').disabled = !window.showSaveFilePicker;
 }
 function onFieldChange(id, grp, key, t) {
   const el = $(id);
@@ -555,6 +557,7 @@ function wire() {
   $('setBase').oninput = e => { S.set.baseSize = St.clamp(num(e.target.value, 9), 5, 30); persist(); renderOverlays(); };
   $('setFill').onchange = e => { S.set.fill = e.target.checked; persist(); renderOverlays(); };
   $('setKeep').onchange = e => { S.set.keepPos = e.target.checked; persist(); };
+  $('setCartVer').onchange = e => { S.set.cartVer = e.target.value === '1' ? '1' : '0'; persist(); renderOverlays(); };
   $('setNameTpl').oninput = e => { S.set.nameTpl = e.target.value; persist(); if (S.step === 3) updateUI(); };
   $('setSaveDlg').onchange = e => { S.set.saveDialog = e.target.checked; persist(); };
   $('setReset').onclick = () => { try { localStorage.removeItem(KEY); } catch (_) { /* ignoré */ } S.rm = DEF_RM(); S.an = DEF_AN(); S.set = DEF_SET(); S.arrets = ['TEM']; if (S.doc) { S.rm.to = S.n; } applyTheme(); syncForm(); renderOverlays(); updateUI(); say('Réglages réinitialisés.'); };

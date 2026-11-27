@@ -22,6 +22,8 @@ pub struct Rm {
     pub tranches: Vec<u8>,
     pub zoom: f32,
     pub base_size: f32,
+    /// 0 = V0 (gabarit du cartouche d'origine), 1 = V1 (mise en page adaptative précédente)
+    pub cart_ver: u8,
 }
 
 impl Default for Rm {
@@ -37,6 +39,7 @@ impl Default for Rm {
             tranches: vec![0],
             zoom: 1.2,
             base_size: 9.0,
+            cart_ver: 0,
         }
     }
 }
@@ -97,6 +100,7 @@ pub fn reg_width(text: &str, size: f32) -> f32 {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Texts {
     pub l1: String,
+    pub tr: String,
     pub l2a: String,
     pub l2b: String,
     pub l3a: String,
@@ -108,7 +112,8 @@ pub fn texts(rm: &Rm, folio: u32) -> Texts {
     let arret = rm.arret.trim();
     let cycle = rm.cycle.trim();
     Texts {
-        l1: format!("Site de {}{}", rm.site.trim(), if tr.is_empty() { String::new() } else { format!(" Tr {tr}") }),
+        l1: format!("Site de {}{}", rm.site.trim(), if tr.is_empty() || rm.cart_ver != 1 { String::new() } else { format!(" Tr {tr}") }),
+        tr: if tr.is_empty() || rm.cart_ver == 1 { String::new() } else { format!("Tr {tr}") },
         l2a: format!("REE {}", rm.ree.trim()),
         l2b: format!("Ind. {}", rm.indice.trim()),
         l3a: format!("Folio {folio}"),
@@ -127,20 +132,55 @@ pub struct Layout {
     pub h: f32,
     pub left_w: f32,
     pub right_w: f32,
+    /// traits verticaux des lignes 2 et 3, et ligne de base du texte (fraction de la police)
+    pub d2: f32,
+    pub d3: f32,
+    pub base: f32,
     pub t: Texts,
+    pub items: Vec<Item>,
+}
+
+/// Texte placé : `x` = bord gauche, ou bord droit si `right`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Item {
+    pub s: String,
+    pub x: f32,
+    pub row: usize,
+    pub right: bool,
 }
 
 pub fn layout(rm: &Rm, folio: u32) -> Layout {
     let fs = rm.base_size * rm.zoom;
-    let padx = fs * 0.45;
-    let pady = fs * 0.22;
-    let row_h = fs * 1.2 + 2.0 * pady;
-    let bw = (fs * 0.09).max(0.6);
     let t = texts(rm, folio);
-    let right_w = reg_width(&t.l2b, fs).max(reg_width(&t.l3b, fs)) + 2.0 * padx;
-    let left_min = reg_width(&t.l2a, fs).max(reg_width(&t.l3a, fs)) + 2.0 * padx;
-    let w = (reg_width(&t.l1, fs) + 2.0 * padx).max(left_min + right_w);
-    Layout { fs, padx, row_h, bw, w, h: 3.0 * row_h, left_w: w - right_w, right_w, t }
+    let it = |s: &str, x: f32, row: usize, right: bool| Item { s: s.to_string(), x, row, right };
+    let mut l = if rm.cart_ver == 1 {
+        let padx = fs * 0.45;
+        let pady = fs * 0.22;
+        let row_h = fs * 1.2 + 2.0 * pady;
+        let right_w = reg_width(&t.l2b, fs).max(reg_width(&t.l3b, fs)) + 2.0 * padx;
+        let left_min = reg_width(&t.l2a, fs).max(reg_width(&t.l3a, fs)) + 2.0 * padx;
+        let w = (reg_width(&t.l1, fs) + 2.0 * padx).max(left_min + right_w);
+        let left_w = w - right_w;
+        let c = |s: &str| left_w + (right_w - reg_width(s, fs)) / 2.0;
+        let items = vec![it(&t.l1, padx, 0, false), it(&t.l2a, padx, 1, false), it(&t.l2b, c(&t.l2b), 1, false), it(&t.l3a, padx, 2, false), it(&t.l3b, c(&t.l3b), 2, false)];
+        Layout { fs, padx, row_h, bw: (fs * 0.09).max(0.6), w, h: 3.0 * row_h, left_w, right_w, d2: left_w, d3: left_w, base: 0.35, t: t.clone(), items }
+    } else {
+        // V0 : gabarit fixe mesuré sur le cartouche d'origine ; un texte trop long déborde (« Tr 0 » sur le site)
+        let row_h = fs * 2.0;
+        let padx = fs * 0.47;
+        let (w, d2, d3) = (fs * 13.55, fs * 8.9, fs * 6.17);
+        let items = vec![
+            it(&t.l1, padx, 0, false),
+            it(&t.tr, fs * 11.3, 0, false),
+            it(&t.l2a, padx, 1, false),
+            it(&t.l2b, d2 + fs * 0.56, 1, false),
+            it(&t.l3a, padx, 2, false),
+            it(&t.l3b, w - fs * 0.46, 2, true),
+        ];
+        Layout { fs, padx, row_h, bw: (fs * 0.13).max(0.6), w, h: 3.0 * row_h, left_w: d2, right_w: w - d2, d2, d3, base: 0.42, t: t.clone(), items }
+    };
+    l.items.retain(|i| !i.s.is_empty());
+    l
 }
 
 /// Cadre englobant (largeur, hauteur) selon l'orientation.
@@ -222,26 +262,22 @@ pub fn cart_content(l: &Layout, p: &Placement, g: &Geo, fill: bool) -> Vec<u8> {
     let y2 = l.h - 2.0 * l.row_h;
     out.extend(
         format!(
-            "0.85 0 0 RG {:.3} w 2 J 0 j\n0 0 {w:.3} {h:.3} re S\n0 {y1:.3} m {w:.3} {y1:.3} l S\n0 {y2:.3} m {w:.3} {y2:.3} l S\n{lw:.3} 0 m {lw:.3} {y1:.3} l S\n",
+            "0.85 0 0 RG {:.3} w 2 J 0 j\n0 0 {w:.3} {h:.3} re S\n0 {y1:.3} m {w:.3} {y1:.3} l S\n0 {y2:.3} m {w:.3} {y2:.3} l S\n{d2:.3} {y1:.3} m {d2:.3} {y2:.3} l S\n{d3:.3} {y2:.3} m {d3:.3} 0 l S\n",
             l.bw,
             w = l.w,
             h = l.h,
-            lw = l.left_w
+            d2 = l.d2,
+            d3 = l.d3
         )
         .into_bytes(),
     );
-    let mut text = |s: &str, x: f32, row: usize| {
-        let y = l.h - (row as f32 * l.row_h + l.row_h / 2.0 + 0.35 * l.fs);
+    for i in &l.items {
+        let x = if i.right { i.x - reg_width(&i.s, l.fs) } else { i.x };
+        let y = l.h - (i.row as f32 * l.row_h + l.row_h / 2.0 + l.base * l.fs);
         out.extend(format!("BT 0.85 0 0 rg /{REG_FONT} {:.3} Tf 1 0 0 1 {x:.3} {y:.3} Tm ", l.fs).into_bytes());
-        out.extend(pdf_string(&win_ansi(s)));
+        out.extend(pdf_string(&win_ansi(&i.s)));
         out.extend(b" Tj ET\n");
-    };
-    let cx = |s: &str| l.left_w + (l.right_w - reg_width(s, l.fs)) / 2.0;
-    text(&l.t.l1, l.padx, 0);
-    text(&l.t.l2a, l.padx, 1);
-    text(&l.t.l2b, cx(&l.t.l2b), 1);
-    text(&l.t.l3a, l.padx, 2);
-    text(&l.t.l3b, cx(&l.t.l3b), 2);
+    }
     out.extend(b"Q\n");
     out
 }
@@ -535,10 +571,11 @@ mod tests {
     fn textes_du_cartouche() {
         let rm = Rm { site: "SITE EXEMPLE".into(), ree: "JPJ 701".into(), indice: "A".into(), arret: "TEM".into(), cycle: "36".into(), ..Rm::default() };
         let t = texts(&rm, 46);
-        assert_eq!(t.l1, "Site de SITE EXEMPLE Tr 0");
+        assert_eq!((t.l1.as_str(), t.tr.as_str()), ("Site de SITE EXEMPLE", "Tr 0"));
+        assert_eq!(texts(&Rm { cart_ver: 1, ..rm.clone() }, 1).l1, "Site de SITE EXEMPLE Tr 0");
         assert_eq!((t.l2a.as_str(), t.l2b.as_str(), t.l3a.as_str(), t.l3b.as_str()), ("REE JPJ 701", "Ind. A", "Folio 46", "TEM"));
         assert_eq!(texts(&Rm { show_cycle: true, ..rm.clone() }, 1).l3b, "TEM 36");
-        assert_eq!(texts(&Rm { tranches: vec![], ..rm }, 1).l1, "Site de SITE EXEMPLE");
+        assert_eq!(texts(&Rm { tranches: vec![], ..rm }, 1).tr, "");
     }
 
     #[test]
@@ -606,7 +643,7 @@ mod tests {
         let doc = Document::load_mem(&out).unwrap();
         let (_, id) = doc.get_pages().into_iter().next().unwrap();
         let text = String::from_utf8_lossy(&doc.get_page_content(id)).to_string();
-        assert!(text.contains("(Site de SITE Tr 0) Tj") && text.contains("(Folio 46) Tj") && text.contains("(Annexe 1 Folio 1/4) Tj"), "{text}");
+        assert!(text.contains("(Site de SITE) Tj") && text.contains("(Tr 0) Tj") && text.contains("(Folio 46) Tj") && text.contains("(Annexe 1 Folio 1/4) Tj"), "{text}");
         if let Ok(p) = std::env::var("OUT_PDF") {
             std::fs::write(p, &out).unwrap();
         }

@@ -260,6 +260,7 @@ impl App {
         rm.show_cycle = s.rm_show_cycle;
         rm.zoom = s.rm_zoom;
         rm.base_size = s.base_size;
+        rm.cart_ver = s.cart_ver;
         let mut rm_tr = [false; 10];
         for t in s.rm_tranches.split(',').filter_map(|x| x.trim().parse::<usize>().ok()).filter(|t| *t < 10) {
             rm_tr[t] = true;
@@ -373,6 +374,7 @@ impl App {
             rm_zoom: self.rm.zoom,
             rm_orient: self.rm_orient.map_or("auto".to_string(), |o| o.to_string()),
             base_size: self.base_size,
+            cart_ver: self.rm.cart_ver,
             keep_pos: self.keep_pos,
             name_tpl: self.name_tpl.clone(),
             recents: self.recents.clone(),

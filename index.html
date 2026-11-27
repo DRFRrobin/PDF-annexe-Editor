@@ -190,6 +190,7 @@
     <label>Taille de base du cartouche (pt)<input id="setBase" type="number" min="5" max="30" step="0.5" value="9"></label>
     <label class="chk"><input type="checkbox" id="setFill" checked> Fond blanc sous les tampons</label>
     <label class="chk"><input type="checkbox" id="setKeep" checked> Garder la position pour la suite (foliotage)</label>
+    <label>Version du cartouche<select id="setCartVer"><option value="0">V0 — modèle d'origine (défauts reproduits)</option><option value="1">V1 — version précédente (mise en page propre)</option></select></label>
     <label>Modèle du nom du PDF exporté<input id="setNameTpl" autocomplete="off" spellcheck="false"></label>
     <p class="hint">Variables : {ree} {tranche} {indice} {site} {arret} {cycle} {nom} (nom d'origine) {folios} (« 36 à 54 », folios du cartouche ReeMaker) {folio1} {folio2}. Ce qui est entre [ ] disparaît si une variable est vide. Exemple : « Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A ».</p>
     <label class="chk"><input type="checkbox" id="setSaveDlg" checked> Proposer la boîte « Enregistrer sous » (Chrome, Edge)</label>

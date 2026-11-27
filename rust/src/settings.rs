@@ -35,6 +35,8 @@ pub struct Settings {
     pub rm_orient: String,
     pub base_size: f32,
     pub keep_pos: bool,
+    /// version du cartouche : 0 = V0 (modèle d'origine), 1 = V1
+    pub cart_ver: u8,
     pub name_tpl: String,
     pub recents: Vec<String>,
 }
@@ -72,6 +74,7 @@ impl Default for Settings {
             rm_orient: "auto".into(),
             base_size: 9.0,
             keep_pos: true,
+            cart_ver: 0,
             name_tpl: DEFAULT_NAME_TPL.into(),
             recents: Vec::new(),
         }
@@ -113,6 +116,7 @@ impl Settings {
         kv("rm_orient", self.rm_orient.clone());
         kv("base_size", self.base_size.to_string());
         kv("keep_pos", self.keep_pos.to_string());
+        kv("cart_ver", self.cart_ver.to_string());
         kv("name_tpl", self.name_tpl.clone());
         for r in &self.recents {
             kv("recent", r.clone());
@@ -151,6 +155,7 @@ impl Settings {
                 "rm_zoom" => s.rm_zoom = v.parse::<f32>().unwrap_or(1.2).clamp(0.5, 3.0),
                 "rm_orient" => s.rm_orient = v.into(),
                 "base_size" => s.base_size = v.parse::<f32>().unwrap_or(9.0).clamp(5.0, 30.0),
+                "cart_ver" => s.cart_ver = if v == "1" { 1 } else { 0 },
                 "keep_pos" => s.keep_pos = v != "false",
                 "name_tpl" if !v.trim().is_empty() => s.name_tpl = if v == OLD_NAME_TPL { DEFAULT_NAME_TPL.into() } else { v.into() },
                 "recent" if !v.is_empty() => recents.push(v.to_string()),
