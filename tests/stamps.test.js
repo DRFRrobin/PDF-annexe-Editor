@@ -40,8 +40,10 @@ const { PDFDocument, StandardFonts, degrees } = PDFLib;
   // texte du cartouche
   const rm = { site: 'SITE EXEMPLE', ree: 'REE 001', indice: 'A', arret: 'TEM', cycle: '36', showCycle: false, tranches: [0], zoom: 1.2, baseSize: 9 };
   let ly = S.cartLayout(reg, rm, 46);
-  assert.deepStrictEqual(ly.t, { l1: 'Site de SITE EXEMPLE Tr 0', l2a: 'REE REE 001', l2b: 'Ind. A', l3a: 'Folio 46', l3b: 'TEM' });
+  assert.deepStrictEqual(ly.t, { l1: 'Site de SITE EXEMPLE', tr: 'Tr 0', l2a: 'REE REE 001', l2b: 'Ind. A', l3a: 'Folio 46', l3b: 'TEM' });
   assert.ok(ly.W > ly.leftW && ly.leftW > 0 && Math.abs(ly.H - 3 * ly.rowH) < 1e-9);
+  const v1 = S.cartLayout(reg, { ...rm, cartVer: '1' }, 46);
+  assert.strictEqual(v1.t.l1, 'Site de SITE EXEMPLE Tr 0'); assert.strictEqual(v1.t.tr, ''); assert.strictEqual(v1.d2, v1.d3);
   assert.strictEqual(S.cartLayout(reg, { ...rm, showCycle: true }, 46).t.l3b, 'TEM 36');
   // le zoom agrandit proportionnellement
   const big = S.cartLayout(reg, { ...rm, zoom: 2.4 }, 46);

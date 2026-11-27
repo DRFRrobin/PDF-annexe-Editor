@@ -2,6 +2,10 @@
 
 Règle : à chaque mise à jour, le numéro de version augmente de 0.0.1 (modifier `APP_VERSION` dans `app.js` et ajouter une entrée ici).
 
+## 1.1.23
+- **Nouveau gabarit du cartouche, fidèle au modèle d'origine** (web et Rust) : police Arial/Helvetica, traits de même épaisseur, ligne 2 coupée vers 65 %, ligne 3 vers 45 %, « Tr 0 » à position fixe à droite de la ligne 1 (il chevauche donc un long nom de site, comme sur l'original), arrêt aligné à droite. Largeur fixe : un texte trop long déborde au lieu d'agrandir la case.
+- **Paramètres → Version du cartouche** : **V0** = modèle d'origine avec ses défauts (par défaut) ; **V1** = mise en page adaptative de la version précédente. Réglage mémorisé, appliqué à l'aperçu et au PDF exporté.
+
 ## 1.1.22
 - **Nom du PDF exporté (web et Rust)** : il commence maintenant par les folios du cartouche ReeMaker — `Folio 36 à 54 de REE JPJ 701 Tr 0 Ind A.pdf` (`Folio 36 de …` s'il n'y a qu'une page). Ce sont les folios posés par ReeMaker (première et dernière page foliotée), pas ceux du tampon Annexio. Sans foliotage, le nom reste `REE … Tr … Ind ….pdf`.
 - Nouvelle variable `{folios}` du modèle (« 36 à 54 ») ; modèle par défaut : `[Folio {folios} de ][REE {ree}][ Tr {tranche}][ Ind {indice}]`. L'ancien modèle par défaut, s'il était mémorisé, est remplacé automatiquement ; un modèle personnalisé n'est pas touché.

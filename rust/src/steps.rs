@@ -489,6 +489,11 @@ impl App {
                     ui.label("Taille de base du cartouche (pt)");
                     ui.add(egui::DragValue::new(&mut self.base_size).range(5.0..=30.0).speed(0.1).fixed_decimals(1));
                 });
+                ui.horizontal(|ui| {
+                    ui.label("Version du cartouche");
+                    ui.radio_value(&mut self.rm.cart_ver, 0, "V0 — modèle d'origine (défauts reproduits)");
+                    ui.radio_value(&mut self.rm.cart_ver, 1, "V1 — version précédente");
+                });
                 ui.checkbox(&mut self.opts.white_fill, "Fond blanc sous les tampons");
                 ui.checkbox(&mut self.keep_pos, "Garder la position pour la suite (foliotage)");
                 ui.label("Modèle du nom du PDF exporté");
